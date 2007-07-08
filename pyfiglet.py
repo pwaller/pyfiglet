@@ -8,6 +8,7 @@ import sys
 from optparse import OptionParser
 import os
 import re
+from zipfile import ZipFile
 
 __version__ = '0.1'
 
@@ -50,14 +51,15 @@ class FigletFont(object):
 
 		self.comment = ''
 		self.chars = {}
+		self.data = None
 
 		self.reMagicNumber = re.compile(r'^flf2.')
 		self.reEndMarker = re.compile(r'(.)\s*$')
 
+		self.readFontFile()
 		self.loadFont()
 
-
-	def loadFont(self):
+	def readFontFile(self):
 		fontPath = '%s/%s.flf' % (self.dir, self.font)
 		if os.path.exists(fontPath) is False:
 			raise FontNotFound, "%s doesn't exist" % fontPath
@@ -67,11 +69,18 @@ class FigletFont(object):
 		except Exception, e:
 			raise FontError, "couldn't open %s: %s" % (fontPath, e)
 
+		try: self.data = fo.read()
+		finally: fo.close()
+
+
+	def loadFont(self):
 		try:
 			"""
 			Parse first line of file, the header
 			"""
-			header = fo.readline().strip()
+			data = self.data.splitlines()
+
+			header = data.pop(0)
 			if self.reMagicNumber.search(header) is None:
 				raise FontError, '%s is not a valid figlet font' % fontPath
 
@@ -99,7 +108,7 @@ class FigletFont(object):
 			Strip out comment lines
 			"""
 			for i in range(0, commentLines):
-				self.comment += fo.readline()
+				self.comment += data.pop(0)
 
 			"""
 			Load characters
@@ -107,7 +116,7 @@ class FigletFont(object):
 			for i in range(32, 127):
 				end = None
 				for j in range(0, height):
-					line = fo.readline().rstrip()
+					line = data.pop(0)
 					if end is None:
 						end = self.reEndMarker.search(line).group(1)
 
@@ -119,21 +128,49 @@ class FigletFont(object):
 					self.chars[i].append(line)
 
 
-		finally:
-			fo.close()
+		except Exception, e:
+			raise FontError, 'problem parsing %s font: %s' % (self.font, e)
 
 
 	def __str__(self):
 		return '<FigletFont object: %s>' % self.font
 
 
+
+class ZippedFigletFont(FigletFont):
+	def __init__(self, dir='.', font='standard', zipfile='fonts.zip'):
+		self.zipfile = zipfile
+		FigletFont.__init__(self, dir=dir, font=font)
+
+	def readFontFile(self):
+		zipPath = '%s/%s' % (self.dir, self.zipfile)
+		if os.path.exists(zipPath) is False:
+			raise FontNotFound, "%s doesn't exist" % zipPath
+
+		fontPath = 'fonts/%s.flf' % self.font
+
+		try:
+			z = ZipFile(zipPath, 'r')
+			files = z.namelist()
+			if fontPath not in files:
+				raise FontNotFound, '%s not found in %s' % (self.font, zipPath)
+
+			self.data = z.read(fontPath)
+
+		except Exception, e:
+			raise FontError, "couldn't open %s: %s" % (fontPath, e)
+
+
+
+
 class Figlet(object):
-	def __init__(self, dir='.', font='standard', direction='auto', justify='auto', width=80):
+	def __init__(self, dir='.', font='standard', direction='auto', justify='auto', width=80, zipfile=None):
 		self.dir = dir
 		self.font = font
 		self._direction = direction
 		self._justify = justify
 		self.width = width
+		self.zipfile = zipfile
 		self.setFont()
 
 	def setFont(self, **kwargs):
@@ -143,7 +180,10 @@ class Figlet(object):
 		if kwargs.has_key('font'):
 			self.font = kwargs['font']
 
-		self.Font = FigletFont(dir=self.dir, font=self.font)
+		if self.zipfile is None:
+			self.Font = FigletFont(dir=self.dir, font=self.font)
+		else:
+			self.Font = ZippedFigletFont(dir=self.dir, font=self.font, zipfile=self.zipfile)
 
 	def getDirection(self):
 		if self._direction == 'auto':
@@ -205,7 +245,7 @@ def main():
 	parser.add_option(	'-f', '--font', default='standard',
 				help='font to render with (default: %default)', metavar='FONT' )
 
-	parser.add_option(	'-d', '--fontdir', default='/usr/local/share/figlet',
+	parser.add_option(	'-d', '--fontdir', default='.',
 				help='location of font files (default: %default)', metavar='DIR' )
 
 	parser.add_option(	'-D', '--direction', type='choice', choices=('auto', 'left-to-right', 'right-to-left'),
@@ -219,6 +259,9 @@ def main():
 	parser.add_option(	'-w', '--width', type='int', default=80, metavar='COLS',
 				help='set terminal width for wrapping/justification (default: %default)' )
 
+	parser.add_option(	'-z', '--zipfile', default=None,
+				help='specify a zipfile to use instead of a directory of fonts' )
+
 
 	opts, args = parser.parse_args()
 
@@ -228,7 +271,11 @@ def main():
 
 	text = ' '.join(args)
 
-	f = Figlet(dir=opts.fontdir, font=opts.font, direction=opts.direction, justify=opts.justify, width=opts.width)
+	f = Figlet(
+		dir=opts.fontdir, font=opts.font, direction=opts.direction,
+		justify=opts.justify, width=opts.width, zipfile=opts.zipfile,
+	)
+
 	print f.translate(text)
 
 
