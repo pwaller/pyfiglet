@@ -161,6 +161,93 @@ class ZippedFigletFont(FigletFont):
 
 
 
+class FigletRenderEngine(object):
+	def __init__(self):
+		self.prevCharWidth = 100
+		self.curCharWidth = 100
+		self.smushMode = 0
+		self.direction = 'left-to-right'
+		self.hardBlank = '$'
+
+		# constants
+		self.SM_EQUAL = 1	# smush equal chars (not hardblanks)
+		self.SM_LOWLINE = 2	# smush _ with any char in hierarchy
+		self.SM_HIERARCHY = 4	# hierarchy: |, /\, [], {}, (), <>
+		self.SM_PAIR = 8	# hierarchy: [ + ] -> |, { + } -> |, ( + ) -> |
+		self.SM_BIGX = 16	# / + \ -> X, > + < -> X
+		self.SM_HARDBLANK = 32	# hardblank + hardblank -> hardblank
+		self.SM_KERN = 64
+		self.SM_SMUSH = 128
+
+
+	"""
+	This is almost a direct translation from smushem() in
+	FIGlet222. Could possibly be done more efficiently with
+	Python idioms if anyone cares to undertake it.
+	"""
+	def smushChars(self, left='', right=''):
+		if left.isspace() is True: return right
+		if right.isspace() is True: return left
+
+		# Disallows overlapping if previous or current char has a width of 1 or zero
+		if (self.prevCharWidth < 2) or (self.curCharWidth < 2): return
+
+		# kerning only
+		if (self.smushMode & self.SM_SMUSH) == 0: return
+
+		# smushing by universal overlapping
+		if (self.smushMode & 63) == 0:
+			# Ensure preference to visiable characters.
+			if left == self.hardBlank: return right
+			if right == self.hardBlank: return left
+
+			"""
+			Ensures that the dominant (foreground)
+			fig-character for overlapping is the latter in the
+			user's text, not necessarily the rightmost character.
+			"""
+			if self.direction == 'right-to-left': return left
+			else: return right
+
+		if self.smushMode & self.SM_HARDBLANK:
+			if left == self.hardBlank and right == self.hardBlank:
+				return left
+
+		if left == self.hardBlank or right == self.hardBlank:
+			return
+
+		if self.smushMode & self.SM_EQUAL:
+			if left == right:
+				return left
+
+		if self.smushMode & self.SM_LOWLINE:
+			if (left  == '_') and (right in r'|/\[]{}()<>'): return right
+			if (right == '_') and (left  in r'|/\[]{}()<>'): return left
+
+		if self.smushMode & self.SM_HIERARCHY:
+			if (left  == '|')   and (right in r'|/\[]{}()<>'): return right
+			if (right == '|')   and (left  in r'|/\[]{}()<>'): return left
+			if (left  in r'\/') and (right in '[]{}()<>'): return right
+			if (right in r'\/') and (left  in '[]{}()<>'): return left
+			if (left  in '[]')  and (right in '{}()<>'): return right
+			if (right in '[]')  and (left  in '{}()<>'): return left
+			if (left  in '{}')  and (right in '()<>'): return right
+			if (right in '{}')  and (left  in '()<>'): return left
+			if (left  in '()')  and (right in '<>'): return right
+			if (right in '()')  and (left  in '<>'): return left
+
+		if self.smushMode & self.SM_PAIR:
+			for pair in [left+right, right+left]:
+				if pair in ['[]', '{}', '()']: return '|'
+
+		if self.smushMode & self.SM_BIGX:
+			if (left == '/') and (right == '\\'): return '|'
+			if (right == '/') and (left == '\\'): return 'Y'
+			if (left == '>') and (right == '<'): return 'X'
+
+		return
+
+
 
 class Figlet(object):
 	def __init__(self, dir=None, zipfile=None, font='standard', direction='auto', justify='auto', width=80):
@@ -225,6 +312,8 @@ class Figlet(object):
 
 
 	def translate(self, text):
+		engine = FigletRenderEngine() # right now this can do smushing..
+
 		text = text.expandtabs()
 		if self.direction == 'right-to-left':
 			text = text[::-1]
