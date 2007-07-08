@@ -185,9 +185,16 @@ class Figlet(object):
 			for char in chars:
 				line += font.chars[char][i]
 
-			buffer += line.replace(font.hardBlank, ' ') + '\n'
+			line = line.replace(font.hardBlank, ' ')
 
-		# XXX justification goes here.. i guess?
+			if self.justify == 'center':
+				line = line.center(self.width)
+			elif self.justify == 'right':
+				line = line.rjust(self.width)
+
+
+			buffer += '%s\n' % line
+
 		
 		return buffer
 
