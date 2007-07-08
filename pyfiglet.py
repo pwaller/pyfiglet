@@ -376,16 +376,68 @@ class Figlet(object):
 
 		return buffer
 
+	"""
+/****************************************************************************
+
+  addchar
+
+  Attempts to add the given character onto the end of the current line.
+  Returns 1 if this can be done, 0 otherwise.
+
+****************************************************************************/
+
+int addchar(c)
+inchr c;
+{
+  int smushamount,row,k;
+  char *templine;
+
+  getletter(c);
+  smushamount = smushamt();
+  if (outlinelen+currcharwidth-smushamount>outlinelenlimit
+      ||inchrlinelen+1>inchrlinelenlimit) {
+    return 0;
+    }
+
+  templine = (char*)myalloc(sizeof(char)*(outlinelenlimit+1));
+  for (row=0;row<charheight;row++) {
+    if (right2left) {
+      strcpy(templine,currchar[row]);
+      for (k=0;k<smushamount;k++) {
+        templine[currcharwidth-smushamount+k] =
+          smushem(templine[currcharwidth-smushamount+k],outputline[row][k]);
+        }
+      strcat(templine,outputline[row]+smushamount);
+      strcpy(outputline[row],templine);
+      }
+    else {
+      for (k=0;k<smushamount;k++) {
+        outputline[row][outlinelen-smushamount+k] =
+          smushem(outputline[row][outlinelen-smushamount+k],currchar[row][k]);
+        }
+      strcat(outputline[row],currchar[row]+smushamount);
+      }
+    }
+  free(templine);
+  outlinelen = MYSTRLEN(outputline[0]);
+  inchrline[inchrlinelen++] = c;
+  return 1;
+}"""
+
 
 	"""
 	Render an ASCII text string in figlet
 	"""
 	def renderText(self, text):
-		engine = FigletKerningEngine()
-
+		# Pre-processing
 		text = text.expandtabs()
 		if self.direction == 'right-to-left':
 			text = text[::-1]
+
+		# create engine to handle rendering
+		#engine = FigletRenderEngine(font=self.Font)
+		#return engine.render(text)
+
 
 		buffer = []
 		for char in map(ord, list(text)):
@@ -449,3 +501,9 @@ def main():
 	return 0
 
 if __name__ == '__main__': sys.exit(main())
+
+"""argh. this needs serious cleanup. move all the rendering crap into
+one class. this class should have access to user-supplied configuration from
+the parent class, and the font its going to use. logic should be there. main
+class should only have accessors for changing options and rendering text."""
+
