@@ -27,8 +27,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
-
-(see LICENSE for full details)
 """
 
 class FigletError(Exception):
@@ -87,7 +85,7 @@ class FigletFont(object):
 			height, baseLine, maxLength, oldLayout, commentLines = map(int, header[1:6])
 			printDirection = fullLayout = codeTagCount = None
 
-			# these are all optional
+			# these are all optional for backwards compat
 			if len(header) > 6: printDirection = int(header[6])
 			if len(header) > 7: fullLayout = int(header[7])
 			if len(header) > 8: codeTagCount = int(header[8])
