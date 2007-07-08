@@ -161,13 +161,17 @@ class ZippedFigletFont(FigletFont):
 
 
 
-class FigletRenderEngine(object):
+"""
+This class handles the dirty bits of kerning/smushing
+"""
+class FigletKerningEngine(object):
 	def __init__(self):
 		self.prevCharWidth = 100
 		self.curCharWidth = 100
 		self.smushMode = 0
 		self.direction = 'left-to-right'
 		self.hardBlank = '$'
+		self.charHeight = 9
 
 		# constants
 		self.SM_EQUAL = 1	# smush equal chars (not hardblanks)
@@ -183,7 +187,7 @@ class FigletRenderEngine(object):
 	"""
 	This is almost a direct translation from smushem() in
 	FIGlet222. Could possibly be done more efficiently with
-	Python idioms if anyone cares to undertake it.
+	Python idioms if anyone cares to undertake it. That wouldn't be I.
 	"""
 	def smushChars(self, left='', right=''):
 		if left.isspace() is True: return right
@@ -247,8 +251,57 @@ class FigletRenderEngine(object):
 
 		return
 
+	"""
+	How much smushing can be done. Not complete. XXX
+	"""
+	def smushAmount(self):
+		if (self.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0: return 0
+		maxSmush = self.curCharWidth
+		for row in range(0, self.charHeight):
+			if self.direction == 'right-to-left':
+				pass
+			else:
+				linebd = len(self.outputLine[row])
+				while True:
+					ch1 = self.outputLine[row][linebd]
+					if (linebd > 0) and (not ch1 or ch1 == ' '): break
+					linedb -= 1
 
 
+
+		"""
+for (row=0;row<charheight;row++) {
+    if (right2left) {
+        for (charbd=MYSTRLEN(currchar[row]); ch1=currchar[row][charbd],(charbd>0&&(!ch1||ch1==' '));charbd--) ;
+        for (linebd=0;ch2=outputline[row][linebd],ch2==' ';linebd++) ;
+        amt = linebd+currcharwidth-1-charbd;
+    } else {
+        for (linebd=MYSTRLEN(outputline[row]);ch1=outputline[row][linebd],(linebd>0&&(!ch1||ch1==' '));linebd--);
+        for (charbd=0;ch2=currchar[row][charbd],ch2==' ';charbd++) ;
+        amt = charbd+outlinelen-1-linebd;
+    }
+
+    if (!ch1||ch1==' ') {
+        amt++;
+    } else if (ch2) {
+        if (smushem(ch1,ch2)!='\0') {
+            amt++;
+        }
+    }
+
+    if (amt<maxsmush) {
+        maxsmush = amt;
+    }
+}
+
+return maxsmush;
+"""
+
+
+
+"""
+Main figlet class. Provides methods for setting the font and rendering text. 
+"""
 class Figlet(object):
 	def __init__(self, dir=None, zipfile=None, font='standard', direction='auto', justify='auto', width=80):
 		self.dir = dir
@@ -311,33 +364,41 @@ class Figlet(object):
 	justify = property(getJustify)
 
 
-	def translate(self, text):
-		engine = FigletRenderEngine() # right now this can do smushing..
+	"""
+	Add a character to the output buffer
+	"""
+	def addCharacter(self, figletChar, buffer):
+		if len(buffer) == 0:
+			buffer = figletChar
+		else:
+			for i in range(0, self.Font.height):
+				buffer[i] = buffer[i] + figletChar[i]
+
+		return buffer
+
+
+	"""
+	Render an ASCII text string in figlet
+	"""
+	def renderText(self, text):
+		engine = FigletKerningEngine()
 
 		text = text.expandtabs()
 		if self.direction == 'right-to-left':
 			text = text[::-1]
 
-		font = self.Font
-		chars = map(ord, list(text))
-		buffer = ''
-		for i in range(0, font.height):
-			line = ''
-			for char in chars:
-				line += font.chars[char][i]
+		buffer = []
+		for char in map(ord, list(text)):
+			figletChar = []
+			for i in range(0, self.Font.height):
+				figletChar.append(self.Font.chars[char][i])
 
-			line = line.replace(font.hardBlank, ' ')
+			buffer = self.addCharacter(figletChar, buffer)
 
-			if self.justify == 'center':
-				line = line.center(self.width)
-			elif self.justify == 'right':
-				line = line.rjust(self.width)
+		# XXX need to redo center/right justification
 
-
-			buffer += '%s\n' % line
-
-		
-		return buffer
+		rendered = '\n'.join(buffer) + '\n'
+		return rendered
 
 
 
@@ -382,7 +443,7 @@ def main():
 		justify=opts.justify, width=opts.width, zipfile=opts.zipfile,
 	)
 
-	print f.translate(text)
+	print f.renderText(text)
 
 
 	return 0
