@@ -38,12 +38,20 @@ class FigletError(Exception):
 		return self.error
 
 class FontNotFound(FigletError):
-	pass
+	"""
+	Raised when a font can't be located
+	"""
 
 class FontError(FigletError):
-	pass
+	"""
+	Raised when there is a problem parsing a font file
+	"""
 
 
+"""
+This class represents the currently loaded font, including
+meta-data about how it should be displayed by default
+"""
 class FigletFont(object):
 	def __init__(self, dir='.', font='standard'):
 		self.dir = dir
@@ -60,6 +68,10 @@ class FigletFont(object):
 		self.readFontFile()
 		self.loadFont()
 
+	"""
+	Load font file into memory. This can be overriden with
+	a superclass to create different font sources.
+	"""
 	def readFontFile(self):
 		fontPath = '%s/%s.flf' % (self.dir, self.font)
 		if os.path.exists(fontPath) is False:
@@ -74,6 +86,9 @@ class FigletFont(object):
 		finally: fo.close()
 
 
+	"""
+	Parse loaded font data for the rendering engine to consume
+	"""
 	def loadFont(self):
 		try:
 			"""
@@ -100,6 +115,10 @@ class FigletFont(object):
 			if len(header) > 7: fullLayout = int(header[7])
 			if len(header) > 8: codeTagCount = int(header[8])
 
+			"""
+			if the new layout style isn't available,
+			convert old layout style. backwards compatability
+			"""
 			if fullLayout is None:
 				if oldLayout == 0:
 					fullLayout = 64
@@ -110,7 +129,10 @@ class FigletFont(object):
 
 
 
-			# useful for later
+			"""
+			Some header information is stored for later, the rendering
+			engine needs to know this stuff.
+			"""
 			self.height = height
 			self.hardBlank = hardBlank
 			self.printDirection = printDirection
@@ -155,6 +177,9 @@ class FigletFont(object):
 
 
 
+"""
+Use this Font class if it exists inside of a zipfile.
+"""
 class ZippedFigletFont(FigletFont):
 	def __init__(self, dir='.', font='standard', zipfile='fonts.zip'):
 		self.zipfile = zipfile
@@ -180,16 +205,14 @@ class ZippedFigletFont(FigletFont):
 
 
 """
-This class handles the dirty bits of kerning/smushing
+This class handles the rendering of a FigletFont,
+including smushing/kerning/justification/direction
 """
 class FigletRenderingEngine(object):
 	def __init__(self, base=None):
 		self.base = base
 
-		self.prevCharWidth = 100
-		self.curCharWidth = 100
-
-		# constants
+		# constants.. lifted from figlet222
 		self.SM_EQUAL = 1	# smush equal chars (not hardblanks)
 		self.SM_LOWLINE = 2	# smush _ with any char in hierarchy
 		self.SM_HIERARCHY = 4	# hierarchy: |, /\, [], {}, (), <>
@@ -201,12 +224,11 @@ class FigletRenderingEngine(object):
 
 
 	"""
-	This is almost a direct translation from smushem() in
-	FIGlet222. Could possibly be done more efficiently with
-	Python idioms if anyone cares to undertake it. That wouldn't be I.
+	Given 2 characters which represent the edges rendered figlet
+	fonts where they would touch, see if they can be smushed together.
+	Returns None if this cannot or should not be done.
 	"""
 	def smushChars(self, left='', right=''):
-
 		if left.isspace() is True: return right
 		if right.isspace() is True: return left
 
@@ -274,20 +296,26 @@ class FigletRenderingEngine(object):
 	Render an ASCII text string in figlet
 	"""
 	def render(self, text):
-		curCharWidth = 0
+		self.curCharWidth = 0
 		buffer = ['' for i in range(0, self.base.Font.height)]
 
 		for c in map(ord, list(text)):
 			curChar = self.base.Font.chars[c]
-			prevCharWidth = curCharWidth
-			curCharWidth = self.base.Font.width[c]
+			self.prevCharWidth = self.curCharWidth
+			self.curCharWidth = self.base.Font.width[c]
 
-			""" this is missing.. hrm
-			  if ((smushmode & (SM_SMUSH | SM_KERN)) == 0) {
-			      return 0;
-			          }"""
+			if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0:
+				continue
 
-			maxSmush = curCharWidth
+			"""
+			Calculate the amount of smushing we can do between this char and the last
+			If this is the first char it will throw a series of exceptions which
+			are caught and cause appropriate values to be set for later.
+
+			This differs from C figlet which will just get bogus values from
+			memory and then discard them after.
+			"""
+			maxSmush = self.curCharWidth
 			for row in range(0, self.base.Font.height):
 				if self.base.direction == 'left-to-right':
 					try:
@@ -297,7 +325,6 @@ class FigletRenderingEngine(object):
 					except:
 						linebd = 0
 						ch1 = ''
-
 
 					try:
 						charbd = len(curChar[row]) - len(curChar[row].lstrip())
@@ -311,7 +338,7 @@ class FigletRenderingEngine(object):
 					except: curLength = 0
 
 
-					amt = charbd + curLength-1-linebd
+					amt = charbd + curLength - 1 - linebd
 
 					if ch1 == '' or ch1 == ' ':
 						amt += 1
@@ -324,40 +351,39 @@ class FigletRenderingEngine(object):
 						maxSmush = amt
 
 
+			"""
+			Add a character to the buffer
+			"""
 			for row in range(0, self.base.Font.height):
-				wBuffer = buffer[row]
-				wChar = curChar[row]
+
+				wBuffer = buffer[row] # row of previously added characters
+				wChar = curChar[row]  # row of character to add
+
+				"""
+				Smushing/Kerning loop. Exceptions in this loop
+				are caused by index out of range errors which
+				indicate smushing should be skipped.
+				"""
 				for i in range(0, maxSmush):
 
-					indA = len(wBuffer) - maxSmush + i
-
-
-					# this excepts
-					try: left = wBuffer[indA]
+					try: left = wBuffer[len(wBuffer) - maxSmush + i]
 					except: left = ''
 
 					right = wChar[i]
-					smushed = self.smushChars(left=left, right=right)
 
-					l = list(wBuffer)
-					sind = len(l)-maxSmush+i
+					smushed = self.smushChars(left=left, right=right)
 
 					try:
 						if smushed is not None:
 							l = list(wBuffer)
-							l[sind] = smushed
+							l[len(l)-maxSmush+i] = smushed
 							wBuffer = ''.join(l)
 					except: pass
 
-				wBuffer += wChar[maxSmush:]
-				buffer[row] = wBuffer
+				buffer[row] = wBuffer + wChar[maxSmush:]
 
 
-
-			if len(buffer[0]) == 0: buffer = curChar
-
-
-
+		# return rendered ASCII with hardblanks replaced
 		buffer = '\n'.join(buffer)
 		buffer = buffer.replace(self.base.Font.hardBlank, ' ')
 		return buffer
@@ -432,11 +458,9 @@ class Figlet(object):
 
 	justify = property(getJustify)
 
+	# wrapper method to engine
 	def renderText(self, text):
 		return self.engine.render(text)
-
-
-
 
 
 def main():
