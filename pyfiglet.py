@@ -51,6 +51,7 @@ class FigletFont(object):
 
 		self.comment = ''
 		self.chars = {}
+		self.width = {}
 		self.data = None
 
 		self.reMagicNumber = re.compile(r'^flf2.')
@@ -115,6 +116,7 @@ class FigletFont(object):
 			"""
 			for i in range(32, 127):
 				end = None
+				width = 0
 				for j in range(0, height):
 					line = data.pop(0)
 					if end is None:
@@ -122,10 +124,15 @@ class FigletFont(object):
 
 					line = line.replace(end, '')
 
+					if len(line) > width:
+						width = len(line)
+
 					if self.chars.has_key(i) is False:
 						self.chars[i] = []
 
 					self.chars[i].append(line)
+
+				self.width[i] = width
 
 
 		except Exception, e:
@@ -250,137 +257,76 @@ class FigletRenderingEngine(object):
 
 		return
 
-	"""
-	How much smushing can be done. Not complete. XXX
-	"""
-	def smushAmount(self):
-		if (self.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0: return 0
-		maxSmush = self.curCharWidth
-		for row in range(0, self.base.Font.height):
-			if self.base.direction == 'right-to-left':
-				pass
-			else:
-				linebd = len(self.outputLine[row])
-				while True:
-					ch1 = self.outputLine[row][linebd]
-					if (linebd > 0) and (not ch1 or ch1 == ' '): break
-					linedb -= 1
-
-
-
-		"""
-for (row=0;row<charheight;row++) {
-    if (right2left) {
-        for (charbd=MYSTRLEN(currchar[row]); ch1=currchar[row][charbd],(charbd>0&&(!ch1||ch1==' '));charbd--) ;
-        for (linebd=0;ch2=outputline[row][linebd],ch2==' ';linebd++) ;
-        amt = linebd+currcharwidth-1-charbd;
-    } else {
-        for (linebd=MYSTRLEN(outputline[row]);ch1=outputline[row][linebd],(linebd>0&&(!ch1||ch1==' '));linebd--);
-        for (charbd=0;ch2=currchar[row][charbd],ch2==' ';charbd++) ;
-        amt = charbd+outlinelen-1-linebd;
-    }
-
-    if (!ch1||ch1==' ') {
-        amt++;
-    } else if (ch2) {
-        if (smushem(ch1,ch2)!='\0') {
-            amt++;
-        }
-    }
-
-    if (amt<maxsmush) {
-        maxsmush = amt;
-    }
-}
-
-return maxsmush;
-"""
-
-	"""
-	Add a character to the output buffer
-	XXX kerning goes here
-	"""
-	def addCharacter(self, figletChar, buffer):
-		if len(buffer) == 0:
-			buffer = figletChar
-		else:
-			for i in range(0, self.base.Font.height):
-				buffer[i] = buffer[i] + figletChar[i]
-
-		return buffer
-
-	"""
-/****************************************************************************
-
-  addchar
-
-  Attempts to add the given character onto the end of the current line.
-  Returns 1 if this can be done, 0 otherwise.
-
-****************************************************************************/
-
-int addchar(c)
-inchr c;
-{
-  int smushamount,row,k;
-  char *templine;
-
-  getletter(c);
-  smushamount = smushamt();
-  if (outlinelen+currcharwidth-smushamount>outlinelenlimit
-      ||inchrlinelen+1>inchrlinelenlimit) {
-    return 0;
-    }
-
-  templine = (char*)myalloc(sizeof(char)*(outlinelenlimit+1));
-  for (row=0;row<charheight;row++) {
-    if (right2left) {
-      strcpy(templine,currchar[row]);
-      for (k=0;k<smushamount;k++) {
-        templine[currcharwidth-smushamount+k] =
-          smushem(templine[currcharwidth-smushamount+k],outputline[row][k]);
-        }
-      strcat(templine,outputline[row]+smushamount);
-      strcpy(outputline[row],templine);
-      }
-    else {
-      for (k=0;k<smushamount;k++) {
-        outputline[row][outlinelen-smushamount+k] =
-          smushem(outputline[row][outlinelen-smushamount+k],currchar[row][k]);
-        }
-      strcat(outputline[row],currchar[row]+smushamount);
-      }
-    }
-  free(templine);
-  outlinelen = MYSTRLEN(outputline[0]);
-  inchrline[inchrlinelen++] = c;
-  return 1;
-}"""
 
 
 	"""
 	Render an ASCII text string in figlet
 	"""
 	def render(self, text):
-		# Pre-processing
-		text = text.expandtabs()
-		if self.base.direction == 'right-to-left':
-			text = text[::-1]
-
-
+		smushMode = 63
+		curCharWidth = 0
 		buffer = []
-		for char in map(ord, list(text)):
-			figletChar = []
-			for i in range(0, self.base.Font.height):
-				figletChar.append(self.base.Font.chars[char][i])
 
-			buffer = self.addCharacter(figletChar, buffer)
+		for c in map(ord, list(text)):
+			curChar = self.base.Font.chars[c]
+			prevCharWidth = curCharWidth
+			curCharWidth = self.base.Font.width[c]
 
-		# XXX need to redo center/right justification
+			if len(buffer) == 0:
+				buffer = curChar
+				continue
 
-		rendered = '\n'.join(buffer) + '\n'
-		return rendered
+			maxSmush = curCharWidth
+			for row in range(0, self.base.Font.height):
+				if self.base.direction == 'left-to-right':
+					try:
+						linebd = len(buffer[row].rstrip())
+						ch1 = buffer[row][linebd-1]
+					except:
+						linebd = 0
+						ch1 = ' '
 
+					try:
+						charbd = len(curChar[row]) - len(curChar[row].lstrip()) + 1
+						ch2 = curChar[row][charbd-1]
+					except:
+						charbd = len(curChar[row])
+						ch2 = ''
+
+					amt = charbd + len(buffer[row])-1-linebd
+
+					if ch1 == '' or ch1 == ' ':
+						amt += 1
+					elif ch2 != '':
+						if self.smushChars(left=ch1, right=ch2) is not None:
+							amt += 1
+
+					if amt < maxSmush:
+						maxSmush = amt
+
+			for row in range(0, self.base.Font.height):
+				for i in range(0, maxSmush):
+					wBuffer = buffer[row]
+					wChar = curChar[row]
+
+					indA = len(wBuffer) - maxSmush + i
+					left = wBuffer[indA]
+					right = wChar[i]
+					smushed = self.smushChars(left=left, right=right)
+
+					if smushed is not None:
+						l = list(wBuffer)
+						l[len(l)-1] = smushed
+						wBuffer = ''.join(l)
+
+					
+					wBuffer += wChar[maxSmush:]
+
+					buffer[row] = wBuffer
+
+
+
+		return '\n'.join(buffer)
 
 
 
