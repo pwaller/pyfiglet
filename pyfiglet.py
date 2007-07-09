@@ -164,14 +164,13 @@ class ZippedFigletFont(FigletFont):
 """
 This class handles the dirty bits of kerning/smushing
 """
-class FigletKerningEngine(object):
-	def __init__(self):
+class FigletRenderingEngine(object):
+	def __init__(self, base=None):
+		self.base = base
+
 		self.prevCharWidth = 100
 		self.curCharWidth = 100
 		self.smushMode = 0
-		self.direction = 'left-to-right'
-		self.hardBlank = '$'
-		self.charHeight = 9
 
 		# constants
 		self.SM_EQUAL = 1	# smush equal chars (not hardblanks)
@@ -202,22 +201,22 @@ class FigletKerningEngine(object):
 		# smushing by universal overlapping
 		if (self.smushMode & 63) == 0:
 			# Ensure preference to visiable characters.
-			if left == self.hardBlank: return right
-			if right == self.hardBlank: return left
+			if left == self.base.Font.hardBlank: return right
+			if right == self.base.Font.hardBlank: return left
 
 			"""
 			Ensures that the dominant (foreground)
 			fig-character for overlapping is the latter in the
 			user's text, not necessarily the rightmost character.
 			"""
-			if self.direction == 'right-to-left': return left
+			if self.base.direction == 'right-to-left': return left
 			else: return right
 
 		if self.smushMode & self.SM_HARDBLANK:
-			if left == self.hardBlank and right == self.hardBlank:
+			if left == self.base.Font.hardBlank and right == self.base.Font.hardBlank:
 				return left
 
-		if left == self.hardBlank or right == self.hardBlank:
+		if left == self.base.Font.hardBlank or right == self.base.Font.hardBlank:
 			return
 
 		if self.smushMode & self.SM_EQUAL:
@@ -257,8 +256,8 @@ class FigletKerningEngine(object):
 	def smushAmount(self):
 		if (self.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0: return 0
 		maxSmush = self.curCharWidth
-		for row in range(0, self.charHeight):
-			if self.direction == 'right-to-left':
+		for row in range(0, self.base.Font.height):
+			if self.base.direction == 'right-to-left':
 				pass
 			else:
 				linebd = len(self.outputLine[row])
@@ -297,81 +296,15 @@ for (row=0;row<charheight;row++) {
 return maxsmush;
 """
 
-
-
-"""
-Main figlet class. Provides methods for setting the font and rendering text. 
-"""
-class Figlet(object):
-	def __init__(self, dir=None, zipfile=None, font='standard', direction='auto', justify='auto', width=80):
-		self.dir = dir
-		self.font = font
-		self._direction = direction
-		self._justify = justify
-		self.width = width
-		self.zipfile = zipfile
-
-		self.setFont()
-
-	def setFont(self, **kwargs):
-		if kwargs.has_key('dir'):
-			self.dir = kwargs['dir']
-
-		if kwargs.has_key('font'):
-			self.font = kwargs['font']
-
-		if kwargs.has_key('zipfile'):
-			self.zipfile = kwargs['zipfile']
-
-
-		Font = None
-		if self.zipfile is not None:
-			try: Font = ZippedFigletFont(dir=self.dir, font=self.font, zipfile=self.zipfile)
-			except: pass
-
-		if Font is None and self.dir is not None:
-			try: Font = FigletFont(dir=self.dir, font=self.font)
-			except: pass
-
-		if Font is None:
-			raise FontNotFound, "Couldn't load font %s: Not found" % self.font
-
-		self.Font = Font
-
-
-	def getDirection(self):
-		if self._direction == 'auto':
-			direction = self.Font.printDirection
-			if direction == 0:
-				return 'left-to-right'
-			elif direction == 1:
-				return 'right-to-left'
-		else:
-			return self._direction
-
-	direction = property(getDirection)
-
-	def getJustify(self):
-		if self._justify == 'auto':
-			if self.direction == 'left-to-right':
-				return 'left'
-			elif self.direction == 'right-to-left':
-				return 'right'
-
-		else:
-			return self._justify
-
-	justify = property(getJustify)
-
-
 	"""
 	Add a character to the output buffer
+	XXX kerning goes here
 	"""
 	def addCharacter(self, figletChar, buffer):
 		if len(buffer) == 0:
 			buffer = figletChar
 		else:
-			for i in range(0, self.Font.height):
+			for i in range(0, self.base.Font.height):
 				buffer[i] = buffer[i] + figletChar[i]
 
 		return buffer
@@ -428,22 +361,18 @@ inchr c;
 	"""
 	Render an ASCII text string in figlet
 	"""
-	def renderText(self, text):
+	def render(self, text):
 		# Pre-processing
 		text = text.expandtabs()
-		if self.direction == 'right-to-left':
+		if self.base.direction == 'right-to-left':
 			text = text[::-1]
-
-		# create engine to handle rendering
-		#engine = FigletRenderEngine(font=self.Font)
-		#return engine.render(text)
 
 
 		buffer = []
 		for char in map(ord, list(text)):
 			figletChar = []
-			for i in range(0, self.Font.height):
-				figletChar.append(self.Font.chars[char][i])
+			for i in range(0, self.base.Font.height):
+				figletChar.append(self.base.Font.chars[char][i])
 
 			buffer = self.addCharacter(figletChar, buffer)
 
@@ -451,6 +380,78 @@ inchr c;
 
 		rendered = '\n'.join(buffer) + '\n'
 		return rendered
+
+
+
+
+"""
+Main figlet class.
+"""
+class Figlet(object):
+	def __init__(self, dir=None, zipfile=None, font='standard', direction='auto', justify='auto', width=80):
+		self.dir = dir
+		self.font = font
+		self._direction = direction
+		self._justify = justify
+		self.width = width
+		self.zipfile = zipfile
+		self.setFont()
+		self.engine = FigletRenderingEngine(base=self)
+
+
+	def setFont(self, **kwargs):
+		if kwargs.has_key('dir'):
+			self.dir = kwargs['dir']
+
+		if kwargs.has_key('font'):
+			self.font = kwargs['font']
+
+		if kwargs.has_key('zipfile'):
+			self.zipfile = kwargs['zipfile']
+
+
+		Font = None
+		if self.zipfile is not None:
+			try: Font = ZippedFigletFont(dir=self.dir, font=self.font, zipfile=self.zipfile)
+			except: pass
+
+		if Font is None and self.dir is not None:
+			try: Font = FigletFont(dir=self.dir, font=self.font)
+			except: pass
+
+		if Font is None:
+			raise FontNotFound, "Couldn't load font %s: Not found" % self.font
+
+		self.Font = Font
+
+
+	def getDirection(self):
+		if self._direction == 'auto':
+			direction = self.Font.printDirection
+			if direction == 0:
+				return 'left-to-right'
+			elif direction == 1:
+				return 'right-to-left'
+		else:
+			return self._direction
+
+	direction = property(getDirection)
+
+	def getJustify(self):
+		if self._justify == 'auto':
+			if self.direction == 'left-to-right':
+				return 'left'
+			elif self.direction == 'right-to-left':
+				return 'right'
+
+		else:
+			return self._justify
+
+	justify = property(getJustify)
+
+	def renderText(self, text):
+		return self.engine.render(text)
+
 
 
 
@@ -501,9 +502,3 @@ def main():
 	return 0
 
 if __name__ == '__main__': sys.exit(main())
-
-"""argh. this needs serious cleanup. move all the rendering crap into
-one class. this class should have access to user-supplied configuration from
-the parent class, and the font its going to use. logic should be there. main
-class should only have accessors for changing options and rendering text."""
-
