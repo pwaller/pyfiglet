@@ -177,7 +177,7 @@ class FigletRenderingEngine(object):
 
 		self.prevCharWidth = 100
 		self.curCharWidth = 100
-		self.smushMode = 0
+		self.smushMode = 4992 #24463
 
 		# constants
 		self.SM_EQUAL = 1	# smush equal chars (not hardblanks)
@@ -196,15 +196,18 @@ class FigletRenderingEngine(object):
 	Python idioms if anyone cares to undertake it. That wouldn't be I.
 	"""
 	def smushChars(self, left='', right=''):
+		print 'mode = %s' % self.smushMode
+
 		if left.isspace() is True: return right
 		if right.isspace() is True: return left
 
 		# Disallows overlapping if previous or current char has a width of 1 or zero
 		if (self.prevCharWidth < 2) or (self.curCharWidth < 2): return
+		print '[SMUSH] A'
 
 		# kerning only
 		if (self.smushMode & self.SM_SMUSH) == 0: return
-
+		print '[SMUSH] B'
 		# smushing by universal overlapping
 		if (self.smushMode & 63) == 0:
 			# Ensure preference to visiable characters.
@@ -225,6 +228,7 @@ class FigletRenderingEngine(object):
 
 		if left == self.base.Font.hardBlank or right == self.base.Font.hardBlank:
 			return
+		print '[SMUSH] C'
 
 		if self.smushMode & self.SM_EQUAL:
 			if left == right:
@@ -255,6 +259,7 @@ class FigletRenderingEngine(object):
 			if (right == '/') and (left == '\\'): return 'Y'
 			if (left == '>') and (right == '<'): return 'X'
 
+		print '[SMUSH] D'
 		return
 
 
@@ -263,70 +268,137 @@ class FigletRenderingEngine(object):
 	Render an ASCII text string in figlet
 	"""
 	def render(self, text):
-		smushMode = 63
+		smushMode = 4992 #24463;
 		curCharWidth = 0
-		buffer = []
+		buffer = ['' for i in range(0, self.base.Font.height)]
 
 		for c in map(ord, list(text)):
+			print "* Current Char: '%s'" % chr(c)
 			curChar = self.base.Font.chars[c]
 			prevCharWidth = curCharWidth
 			curCharWidth = self.base.Font.width[c]
+			print "   => prevCharWidth = %d" % prevCharWidth
+			print "   => currCharWidth = %d" % curCharWidth
 
-			if len(buffer) == 0:
-				buffer = curChar
-				continue
+			""" this is missing.. hrm
+			  if ((smushmode & (SM_SMUSH | SM_KERN)) == 0) {
+			      return 0;
+			          }"""
+
+			print '>>>>>>>>>> calculating maxSmush <<<<<<<<<<'
 
 			maxSmush = curCharWidth
+			print "* initial set to: %d" % maxSmush
 			for row in range(0, self.base.Font.height):
+				print "(WANT TO ADD) '%s'" % curChar[row]
+				print '*** row = %d' % row
 				if self.base.direction == 'left-to-right':
 					try:
-						linebd = len(buffer[row].rstrip())
-						ch1 = buffer[row][linebd-1]
+						print "LOL: '%s'" % buffer[row]
+						linebd = len(buffer[row].rstrip()) - 1
+						if linebd < 0: linebd = 0
+						ch1 = buffer[row][linebd]
 					except:
 						linebd = 0
-						ch1 = ' '
+						ch1 = ''
+
+
+					print 'linebd = %s, ch1 = \'%s\'' % (linebd, ch1)
 
 					try:
-						charbd = len(curChar[row]) - len(curChar[row].lstrip()) + 1
-						ch2 = curChar[row][charbd-1]
+						charbd = len(curChar[row]) - len(curChar[row].lstrip())
+						ch2 = curChar[row][charbd]
 					except:
 						charbd = len(curChar[row])
 						ch2 = ''
+						
+					print "charbd = %s, ch2 = '%s'" % (charbd, ch2)
 
-					amt = charbd + len(buffer[row])-1-linebd
+					#print 'charbd = %s' % charbd
+					#print "'%s'" % ch2
+
+					try: curLength = len(buffer[row])
+					except: curLength = 0
+
+					#print 'outlinelen = %d' % curLength
+
+					amt = charbd + curLength-1-linebd
+					print 'initial amt = %d' % amt
+					#print 'amt = %d' % amt
 
 					if ch1 == '' or ch1 == ' ':
+						print "(*) LOGIC A TRIGGER"
 						amt += 1
 					elif ch2 != '':
 						if self.smushChars(left=ch1, right=ch2) is not None:
+							print "(*) LOGIC B TRIGGER"
 							amt += 1
+
+					print 'amt after logic = %d' % amt
+					#print 'amt = %d' % amt
 
 					if amt < maxSmush:
 						maxSmush = amt
 
+			print "      ((( maxsmush = %d )))" % maxSmush
+
+
 			for row in range(0, self.base.Font.height):
+				print '[RENDER] row = %d' % row
+				wBuffer = buffer[row]
+				wChar = curChar[row]
 				for i in range(0, maxSmush):
-					wBuffer = buffer[row]
-					wChar = curChar[row]
+					print '[RENDER-FOR2] k = %d' % i
+
+					# XXX this is the broken part.. fencepost?
+					print "[RENDER-FOR2] buffer = '%s'" % wBuffer
+					print "[RENDER-FOR2] newchr = '%s'" % wChar
+
 
 					indA = len(wBuffer) - maxSmush + i
-					left = wBuffer[indA]
+
+
+					# this excepts
+					try: left = wBuffer[indA]
+					except: left = ''
+
 					right = wChar[i]
+					print "[RENDER-FOR2] left = '%s'" % left
+					print "[RENDER-FOR2] right = '%s'" % right
 					smushed = self.smushChars(left=left, right=right)
+					print "[RENDER-FOR2] smushChar = '%s'" % smushed
+					#smushed = self.smushChars(left=left, right=right)
 
-					if smushed is not None:
-						l = list(wBuffer)
-						l[len(l)-1] = smushed
-						wBuffer = ''.join(l)
+					l = list(wBuffer)
+					sind = len(l)-maxSmush+i
+					print "%d - %d + %d = %d" % ( len(l), maxSmush, i, sind)
+					print "Index of part being replaced is %d" % sind
 
-					
-					wBuffer += wChar[maxSmush:]
+					try:
+						if smushed is not None:
+							l = list(wBuffer)
+							l[sind] = smushed
+							wBuffer = ''.join(l)
+					except: pass
 
-					buffer[row] = wBuffer
+				print '(done with smushing, add new char'
+				wBuffer += wChar[maxSmush:]
+				buffer[row] = wBuffer
 
 
 
-		return '\n'.join(buffer)
+			if len(buffer[0]) == 0: buffer = curChar
+			print '\n\n<<< RESULT AFTER ITER >>>\n'
+			for row in range(0, self.base.Font.height):
+				print "* '%s'" % buffer[row]
+
+
+
+
+
+		buffer = '\n'.join(buffer)
+		buffer = buffer.replace(self.base.Font.hardBlank, ' ')
+		return buffer
 
 
 
