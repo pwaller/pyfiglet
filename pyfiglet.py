@@ -100,10 +100,21 @@ class FigletFont(object):
 			if len(header) > 7: fullLayout = int(header[7])
 			if len(header) > 8: codeTagCount = int(header[8])
 
+			if fullLayout is None:
+				if oldLayout == 0:
+					fullLayout = 64
+				elif oldLayout < 0:
+					fullLayout = 0
+				else:
+					fullLayout = (oldLayout & 31) | 128
+
+
+
 			# useful for later
 			self.height = height
 			self.hardBlank = hardBlank
 			self.printDirection = printDirection
+			self.smushMode = fullLayout
 
 			"""
 			Strip out comment lines
@@ -177,7 +188,6 @@ class FigletRenderingEngine(object):
 
 		self.prevCharWidth = 100
 		self.curCharWidth = 100
-		self.smushMode = 4992 #24463
 
 		# constants
 		self.SM_EQUAL = 1	# smush equal chars (not hardblanks)
@@ -196,7 +206,6 @@ class FigletRenderingEngine(object):
 	Python idioms if anyone cares to undertake it. That wouldn't be I.
 	"""
 	def smushChars(self, left='', right=''):
-		print 'mode = %s' % self.smushMode
 
 		if left.isspace() is True: return right
 		if right.isspace() is True: return left
@@ -206,10 +215,10 @@ class FigletRenderingEngine(object):
 		print '[SMUSH] A'
 
 		# kerning only
-		if (self.smushMode & self.SM_SMUSH) == 0: return
+		if (self.base.Font.smushMode & self.SM_SMUSH) == 0: return
 		print '[SMUSH] B'
 		# smushing by universal overlapping
-		if (self.smushMode & 63) == 0:
+		if (self.base.Font.smushMode & 63) == 0:
 			# Ensure preference to visiable characters.
 			if left == self.base.Font.hardBlank: return right
 			if right == self.base.Font.hardBlank: return left
@@ -222,7 +231,7 @@ class FigletRenderingEngine(object):
 			if self.base.direction == 'right-to-left': return left
 			else: return right
 
-		if self.smushMode & self.SM_HARDBLANK:
+		if self.base.Font.smushMode & self.SM_HARDBLANK:
 			if left == self.base.Font.hardBlank and right == self.base.Font.hardBlank:
 				return left
 
@@ -230,15 +239,15 @@ class FigletRenderingEngine(object):
 			return
 		print '[SMUSH] C'
 
-		if self.smushMode & self.SM_EQUAL:
+		if self.base.Font.smushMode & self.SM_EQUAL:
 			if left == right:
 				return left
 
-		if self.smushMode & self.SM_LOWLINE:
+		if self.base.Font.smushMode & self.SM_LOWLINE:
 			if (left  == '_') and (right in r'|/\[]{}()<>'): return right
 			if (right == '_') and (left  in r'|/\[]{}()<>'): return left
 
-		if self.smushMode & self.SM_HIERARCHY:
+		if self.base.Font.smushMode & self.SM_HIERARCHY:
 			if (left  == '|')   and (right in r'|/\[]{}()<>'): return right
 			if (right == '|')   and (left  in r'|/\[]{}()<>'): return left
 			if (left  in r'\/') and (right in '[]{}()<>'): return right
@@ -250,11 +259,11 @@ class FigletRenderingEngine(object):
 			if (left  in '()')  and (right in '<>'): return right
 			if (right in '()')  and (left  in '<>'): return left
 
-		if self.smushMode & self.SM_PAIR:
+		if self.base.Font.smushMode & self.SM_PAIR:
 			for pair in [left+right, right+left]:
 				if pair in ['[]', '{}', '()']: return '|'
 
-		if self.smushMode & self.SM_BIGX:
+		if self.base.Font.smushMode & self.SM_BIGX:
 			if (left == '/') and (right == '\\'): return '|'
 			if (right == '/') and (left == '\\'): return 'Y'
 			if (left == '>') and (right == '<'): return 'X'
@@ -268,7 +277,6 @@ class FigletRenderingEngine(object):
 	Render an ASCII text string in figlet
 	"""
 	def render(self, text):
-		smushMode = 4992 #24463;
 		curCharWidth = 0
 		buffer = ['' for i in range(0, self.base.Font.height)]
 
@@ -292,6 +300,7 @@ class FigletRenderingEngine(object):
 			for row in range(0, self.base.Font.height):
 				print "(WANT TO ADD) '%s'" % curChar[row]
 				print '*** row = %d' % row
+				print 'dir = %s' % self.base.direction
 				if self.base.direction == 'left-to-right':
 					try:
 						print "LOL: '%s'" % buffer[row]
@@ -450,6 +459,9 @@ class Figlet(object):
 				return 'left-to-right'
 			elif direction == 1:
 				return 'right-to-left'
+			else:
+				return 'left-to-right'
+
 		else:
 			return self._direction
 
