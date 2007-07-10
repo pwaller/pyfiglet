@@ -29,7 +29,10 @@ FAQ
 
 	Q. Does this support kerning/smushing like FIGlet?
 	A. Yes, yes it does. Output should be identical to FIGlet. If
-           not, this is a bug, which you should report to me!
+           not, this is a bug, which you should report to me! As of this release,
+           there are 8 out of 418 total fonts which do not produce identical
+           output in the test suite. This is due to the lack of wrapping and
+           right-to-left orientation, which will be fixed in the next release.
 
 	Q. Can I use/modify/redstribute this code?
 	A. Yes, under the terms of the GPL (see LICENSE below).
