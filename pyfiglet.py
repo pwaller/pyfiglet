@@ -477,7 +477,7 @@ class Figlet(object):
 	def renderText(self, text):
 		return self.engine.render(text)
 
-	def getFonts():
+	def getFonts(self):
 		return self.Font.getFonts()
 
 
