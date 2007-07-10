@@ -432,6 +432,8 @@ class Figlet(object):
 
 
 	def getDirection(self):
+		return 'left-to-right'
+
 		if self._direction == 'auto':
 			direction = self.Font.printDirection
 			if direction == 0:
