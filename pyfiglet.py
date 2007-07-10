@@ -10,7 +10,7 @@ import os
 import re
 from zipfile import ZipFile
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 __copyright__ = """
 Copyright (C) 2007 Christopher Jones <cjones@insub.org>
@@ -317,8 +317,6 @@ class FigletRenderingEngine(object):
 			self.prevCharWidth = self.curCharWidth
 			self.curCharWidth = self.base.Font.width[c]
 
-			if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0:
-				continue
 
 			"""
 			Calculate the amount of smushing we can do between this char and the last
@@ -362,6 +360,9 @@ class FigletRenderingEngine(object):
 
 					if amt < maxSmush:
 						maxSmush = amt
+
+			if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0:
+				maxSmush = 0
 
 
 			"""

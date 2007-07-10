@@ -68,10 +68,15 @@ USAGE
 	that there *must* be a folder in the root of the zipfile called "fonts". You
 	can examine the bunlded fonts.zip to see how it should be packaged.
 
-BUGS
-	As of this writing, right-to-left orientation is not supported, and a small
-	handful of fonts don't render at all (blank output). This should be fixed
-	shortly, but I am releasing it now because it is mostly done.
+TODO
+	As of this version, a few things aren't supported, but are in the works:
+		* right-to-left orientation
+		* right/center justification
+		* wrapping
+
+	These post-processing considerations have been saved for last because it
+	is possible to achieve these effects without figlet.
+
 
 AUTHOR
 
