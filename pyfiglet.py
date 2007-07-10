@@ -85,6 +85,12 @@ class FigletFont(object):
 		try: self.data = fo.read()
 		finally: fo.close()
 
+	def getFonts(self):
+		return [font[:-4] for font in os.walk(self.dir).next()[2] if font.endswith('.flf')]
+		
+
+
+
 
 	"""
 	Parse loaded font data for the rendering engine to consume
@@ -201,6 +207,13 @@ class ZippedFigletFont(FigletFont):
 
 		except Exception, e:
 			raise FontError, "couldn't open %s: %s" % (fontPath, e)
+
+	def getFonts(self):
+		if os.path.exists(self.zipfile) is False:
+			raise FontNotFound, "%s doesn't exist" % self.zipfile
+
+		z = ZipFile(self.zipfile, 'r')
+		return [font[6:-4] for font in z.namelist() if font.endswith('.flf')]
 
 
 
@@ -463,6 +476,10 @@ class Figlet(object):
 	# wrapper method to engine
 	def renderText(self, text):
 		return self.engine.render(text)
+
+	def getFonts():
+		return self.Font.getFonts()
+
 
 
 def main():
