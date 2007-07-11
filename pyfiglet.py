@@ -439,7 +439,8 @@ class FigletRenderingEngine(object):
 						except:
 							pass
 
-					buffer[row] = wBuffer + templine
+					templine = templine + wBuffer[maxSmush:]
+					buffer[row] = templine
 
 
 		# return rendered ASCII with hardblanks replaced
