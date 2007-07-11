@@ -25,7 +25,7 @@ def main():
 
 		outputPyfiglet = f.renderText('test')
 
-		p = Popen('figlet -f %s test' % font, shell=True, bufsize=1, stdout=PIPE)
+		p = Popen('figlet -d ./fonts -f %s test' % font, shell=True, bufsize=1, stdout=PIPE)
 		outputFiglet = ''.join(p.stdout.readlines())
 		p.stdout.close()
 		p.wait()

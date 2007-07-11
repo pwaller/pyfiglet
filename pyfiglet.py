@@ -442,6 +442,14 @@ class FigletRenderingEngine(object):
 					templine = templine + wBuffer[maxSmush:]
 					buffer[row] = templine
 
+		# justify text
+		if self.base.justify == 'right':
+			for row in range(0, self.base.Font.height):
+				buffer[row] = (' ' * (self.base.width - len(buffer[row]) - 1)) + buffer[row]
+
+		elif self.base.justify == 'center':
+			pass
+
 
 		# return rendered ASCII with hardblanks replaced
 		buffer = '\n'.join(buffer) + '\n'
