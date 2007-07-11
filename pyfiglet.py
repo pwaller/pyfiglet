@@ -355,18 +355,36 @@ class FigletRenderingEngine(object):
 					try: curLength = len(buffer[row])
 					except: curLength = 0
 
-
 					amt = charbd + curLength - 1 - linebd
 
-					if ch1 == '' or ch1 == ' ':
+				elif self.base.direction == 'right-to-left':
+					try:
+						charbd = len(curChar[row].rstrip()) - 1
+						if charbd < 0: charbd = 0
+						ch1 = curChar[row][charbd]
+					except:
+						charbd = 0
+						ch1 = ''
+
+					try:
+						linebd = len(buffer[row]) - len(buffer[row].lstrip())
+						ch2 = buffer[row][linebd]
+					except:
+						linebd = len(buffer[row])
+						ch2 = ''
+
+					amt = linebd + self.curCharWidth - 1 - charbd
+
+
+				if ch1 == '' or ch1 == ' ':
+					amt += 1
+				elif ch2 != '':
+					if self.smushChars(left=ch1, right=ch2) is not None:
 						amt += 1
-					elif ch2 != '':
-						if self.smushChars(left=ch1, right=ch2) is not None:
-							amt += 1
 
 
-					if amt < maxSmush:
-						maxSmush = amt
+				if amt < maxSmush:
+					maxSmush = amt
 
 			if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0:
 				maxSmush = 0
@@ -374,34 +392,54 @@ class FigletRenderingEngine(object):
 
 			"""
 			Add a character to the buffer
+
+			Smushing/Kerning loop. Exceptions in this loop
+			are caused by index out of range errors which
+			indicate smushing should be skipped.
 			"""
+			templine = ''
 			for row in range(0, self.base.Font.height):
 
 				wBuffer = buffer[row] # row of previously added characters
 				wChar = curChar[row]  # row of character to add
 
-				"""
-				Smushing/Kerning loop. Exceptions in this loop
-				are caused by index out of range errors which
-				indicate smushing should be skipped.
-				"""
-				for i in range(0, maxSmush):
+				if self.base.direction == 'left-to-right':
+					for i in range(0, maxSmush):
 
-					try: left = wBuffer[len(wBuffer) - maxSmush + i]
-					except: left = ''
+						try: left = wBuffer[len(wBuffer) - maxSmush + i]
+						except: left = ''
 
-					right = wChar[i]
+						right = wChar[i]
 
-					smushed = self.smushChars(left=left, right=right)
+						smushed = self.smushChars(left=left, right=right)
 
-					try:
-						if smushed is not None:
-							l = list(wBuffer)
-							l[len(l)-maxSmush+i] = smushed
-							wBuffer = ''.join(l)
-					except: pass
+						try:
+							if smushed is not None:
+								l = list(wBuffer)
+								l[len(l)-maxSmush+i] = smushed
+								wBuffer = ''.join(l)
+						except: pass
 
-				buffer[row] = wBuffer + wChar[maxSmush:]
+					buffer[row] = wBuffer + wChar[maxSmush:]
+
+				elif self.base.direction == 'right-to-left':
+					templine = wChar
+					for i in range(0, maxSmush):
+						try: left = templine[self.curCharWidth - maxSmush + i]
+						except: left = ''
+
+						right = wBuffer[i]
+
+						smushed = self.smushChars(left=left, right=right)
+
+						try:
+							l = list(templine)
+							l[self.curCharWidth - maxSmush +i] = smushed
+							templine = ''.join(l)
+						except:
+							pass
+
+					buffer[row] = wBuffer + templine
 
 
 		# return rendered ASCII with hardblanks replaced
@@ -453,8 +491,6 @@ class Figlet(object):
 
 
 	def getDirection(self):
-		return 'left-to-right'
-
 		if self._direction == 'auto':
 			direction = self.Font.printDirection
 			if direction == 0:
