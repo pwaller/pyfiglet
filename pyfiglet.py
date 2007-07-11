@@ -160,8 +160,9 @@ class FigletFont(object):
 					line = data.pop(0)
 					if end is None:
 						end = self.reEndMarker.search(line).group(1)
+						end = re.compile(re.escape(end) + r'{1,2}$')
 
-					line = line.replace(end, '')
+					line = end.sub('', line)
 
 					if len(line) > width:
 						width = len(line)
