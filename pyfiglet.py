@@ -449,7 +449,8 @@ class FigletRenderingEngine(object):
 				buffer[row] = (' ' * (self.base.width - len(buffer[row]) - 1)) + buffer[row]
 
 		elif self.base.justify == 'center':
-			pass
+			for row in range(0, self.base.Font.height):
+				buffer[row] = (' ' * int((self.base.width - len(buffer[row])) / 2)) + buffer[row]
 
 
 		# return rendered ASCII with hardblanks replaced
