@@ -182,6 +182,13 @@ class FigletFont(object):
 		return '<FigletFont object: %s>' % self.font
 
 
+"""
+Rendered figlet font
+"""
+class RenderedOutput(str):
+	pass
+
+
 
 """
 Use this Font class if it exists inside of a zipfile.
@@ -400,7 +407,7 @@ class FigletRenderingEngine(object):
 		# return rendered ASCII with hardblanks replaced
 		buffer = '\n'.join(buffer) + '\n'
 		buffer = buffer.replace(self.base.Font.hardBlank, ' ')
-		return buffer
+		return RenderedOutput(buffer)
 
 
 
