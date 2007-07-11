@@ -398,7 +398,7 @@ class FigletRenderingEngine(object):
 
 
 		# return rendered ASCII with hardblanks replaced
-		buffer = '\n'.join(buffer)
+		buffer = '\n'.join(buffer) + '\n'
 		buffer = buffer.replace(self.base.Font.hardBlank, ' ')
 		return buffer
 
