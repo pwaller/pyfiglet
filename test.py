@@ -23,13 +23,17 @@ def main():
 
 	ok = 0
 	fail = 0
+	failed = []
+	skip = ['runic']
 
 	for font in f.getFonts():
+		if font in skip: continue
+
 		f.setFont(font=font)
 
-		outputPyfiglet = f.renderText('test')
+		outputPyfiglet = f.renderText('foo')
 
-		p = Popen('figlet -d ./fonts -f %s test' % font, shell=True, bufsize=1, stdout=PIPE)
+		p = Popen('figlet -d ./fonts -f %s foo' % font, shell=True, bufsize=1, stdout=PIPE)
 		outputFiglet = ''.join(p.stdout.readlines())
 		p.stdout.close()
 		p.wait()
@@ -41,6 +45,7 @@ def main():
 
 		print '[FAIL] %s' % font
 		fail += 1
+		failed.append(font)
 
 		if opts.show is True:
 			print '[PYTHON] *** %s\n\n' % font
@@ -50,6 +55,8 @@ def main():
 			raw_input()
 
 	print 'OK = %d, FAIL = %d' % (ok, fail)
+	if len(failed) > 0:
+		print 'FAILED = %s' % repr(failed)
 
 	return 0
 

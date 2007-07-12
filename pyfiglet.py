@@ -338,6 +338,9 @@ class FigletRenderingEngine(object):
 
 		return
 
+	def smushAmount(self, left=None, right=None):
+		pass
+
 
 
 	"""
@@ -363,53 +366,33 @@ class FigletRenderingEngine(object):
 			"""
 			maxSmush = self.curCharWidth
 			for row in range(0, self.base.Font.height):
-				if self.base.direction == 'left-to-right':
-					try:
-						linebd = len(buffer[row].rstrip()) - 1
-						if linebd < 0: linebd = 0
-						ch1 = buffer[row][linebd]
-					except:
-						linebd = 0
-						ch1 = ''
+				lineLeft = buffer[row]
+				lineRight = curChar[row]
+				if self.base.direction == 'right-to-left':
+					lineLeft, lineRight = lineRight, lineLeft
 
-					try:
-						charbd = len(curChar[row]) - len(curChar[row].lstrip())
-						ch2 = curChar[row][charbd]
-					except:
-						charbd = len(curChar[row])
-						ch2 = ''
-						
+				try:
+					linebd = len(lineLeft.rstrip()) - 1
+					if linebd < 0: linebd = 0
+					ch1 = lineLeft[linebd]
+				except:
+					linebd = 0
+					ch1 = ''
 
-					try: curLength = len(buffer[row])
-					except: curLength = 0
+				try:
+					charbd = len(lineRight) - len(lineRight.lstrip())
+					ch2 = lineRight[charbd]
+				except:
+					charbd = len(lineRight)
+					ch2 = ''
+					
 
-					amt = charbd + curLength - 1 - linebd
-
-				elif self.base.direction == 'right-to-left':
-					try:
-						charbd = len(curChar[row].rstrip()) - 1
-						if charbd < 0: charbd = 0
-						ch1 = curChar[row][charbd]
-					except:
-						charbd = 0
-						ch1 = ''
-
-					try:
-						linebd = len(buffer[row]) - len(buffer[row].lstrip())
-						ch2 = buffer[row][linebd]
-					except:
-						linebd = len(buffer[row])
-						ch2 = ''
-
-					amt = linebd + self.curCharWidth - 1 - charbd
-
+				amt = charbd + len(lineLeft) - 1 - linebd
 
 				if ch1 == '' or ch1 == ' ':
 					amt += 1
-				elif ch2 != '':
-					if self.smushChars(left=ch1, right=ch2) is not None:
-						amt += 1
-
+				elif ch2 != '' and self.smushChars(left=ch1, right=ch2) is not None:
+					amt += 1
 
 				if amt < maxSmush:
 					maxSmush = amt
@@ -419,53 +402,33 @@ class FigletRenderingEngine(object):
 
 
 			"""
-			Add a character to the buffer
-
-			Smushing/Kerning loop. Exceptions in this loop
-			are caused by index out of range errors which
-			indicate smushing should be skipped.
+			Add a character to the buffer and do smushing/kerning
 			"""
 			for row in range(0, self.base.Font.height):
+				addLeft = buffer[row]
+				addRight = curChar[row]
 
-				wBuffer = buffer[row] # row of previously added characters
-				wChar = curChar[row]  # row of character to add
+				if self.base.direction == 'right-to-left':
+					addLeft, addRight = addRight, addLeft
 
-				if self.base.direction == 'left-to-right':
-					for i in range(0, maxSmush):
+				for i in range(0, maxSmush):
 
-						try: left = wBuffer[len(wBuffer) - maxSmush + i]
-						except: left = ''
+					try: left = addLeft[len(addLeft) - maxSmush + i]
+					except: left = ''
 
-						right = wChar[i]
+					right = addRight[i]
 
-						smushed = self.smushChars(left=left, right=right)
+					smushed = self.smushChars(left=left, right=right)
 
-						try:
-							l = list(wBuffer)
-							l[len(l)-maxSmush+i] = smushed
-							wBuffer = ''.join(l)
-						except:
-							pass
+					try:
+						l = list(addLeft)
+						l[len(l)-maxSmush+i] = smushed
+						addLeft = ''.join(l)
+					except:
+						pass
 
-					buffer[row] = wBuffer + wChar[maxSmush:]
+				buffer[row] = addLeft + addRight[maxSmush:]
 
-				elif self.base.direction == 'right-to-left':
-					for i in range(0, maxSmush):
-						try: left = wChar[self.curCharWidth - maxSmush + i]
-						except: left = ''
-
-						right = wBuffer[i]
-
-						smushed = self.smushChars(left=left, right=right)
-
-						try:
-							l = list(wChar)
-							l[self.curCharWidth - maxSmush +i] = smushed
-							wChar = ''.join(l)
-						except:
-							pass
-
-					buffer[row] = wChar + wBuffer[maxSmush:]
 
 		"""
 		Justify text. This does not use str.rjust/str.center
