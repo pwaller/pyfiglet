@@ -10,7 +10,7 @@ import re
 from zipfile import ZipFile
 from optparse import OptionParser
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 __copyright__ = """
 Copyright (C) 2007 Christopher Jones <cjones@insub.org>
@@ -394,13 +394,9 @@ class FigletRenderingEngine(object):
 
 		for c in map(ord, list(text)):
 			if self.base.Font.chars.has_key(c) is False: continue
-
 			curChar = self.base.Font.chars[c]
-
-			if len(buffer) == 0: buffer = ['' for i in range(self.base.Font.height)]
-
 			self.curCharWidth = self.base.Font.width[c]
-
+			if len(buffer) == 0: buffer = ['' for i in range(self.base.Font.height)]
 			maxSmush = self.smushAmount(buffer=buffer, curChar=curChar)
 
 			"""
