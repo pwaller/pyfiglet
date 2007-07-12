@@ -156,6 +156,7 @@ class FigletFont(object):
 			for i in range(32, 127):
 				end = None
 				width = 0
+				chars = []
 				for j in range(0, height):
 					line = data.pop(0)
 					if end is None:
@@ -164,15 +165,12 @@ class FigletFont(object):
 
 					line = end.sub('', line)
 
-					if len(line) > width:
-						width = len(line)
+					if len(line) > width: width = len(line)
+					chars.append(line)
 
-					if self.chars.has_key(i) is False:
-						self.chars[i] = []
-
-					self.chars[i].append(line)
-
-				self.width[i] = width
+				if ''.join(chars) != '':
+					self.chars[i] = chars
+					self.width[i] = width
 
 
 		except Exception, e:
@@ -338,8 +336,52 @@ class FigletRenderingEngine(object):
 
 		return
 
-	def smushAmount(self, left=None, right=None):
-		pass
+	"""
+	Calculate the amount of smushing we can do between this char and the last
+	If this is the first char it will throw a series of exceptions which
+	are caught and cause appropriate values to be set for later.
+
+	This differs from C figlet which will just get bogus values from
+	memory and then discard them after.
+	"""
+	def smushAmount(self, left=None, right=None, buffer=[], curChar=[]):
+		if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0: return 0
+
+		maxSmush = self.curCharWidth
+		for row in range(0, self.base.Font.height):
+			lineLeft = buffer[row]
+			lineRight = curChar[row]
+			if self.base.direction == 'right-to-left':
+				lineLeft, lineRight = lineRight, lineLeft
+
+			try:
+				linebd = len(lineLeft.rstrip()) - 1
+				if linebd < 0: linebd = 0
+				ch1 = lineLeft[linebd]
+			except:
+				linebd = 0
+				ch1 = ''
+
+			try:
+				charbd = len(lineRight) - len(lineRight.lstrip())
+				ch2 = lineRight[charbd]
+			except:
+				charbd = len(lineRight)
+				ch2 = ''
+				
+
+			amt = charbd + len(lineLeft) - 1 - linebd
+
+			if ch1 == '' or ch1 == ' ':
+				amt += 1
+			elif ch2 != '' and self.smushChars(left=ch1, right=ch2) is not None:
+				amt += 1
+
+			if amt < maxSmush:
+				maxSmush = amt
+
+
+		return maxSmush
 
 
 
@@ -348,58 +390,19 @@ class FigletRenderingEngine(object):
 	"""
 	def render(self, text):
 		self.curCharWidth = 0
-		buffer = ['' for i in range(0, self.base.Font.height)]
+		self.prevCharWidth = 0
+		buffer = []
 
 		for c in map(ord, list(text)):
+			if self.base.Font.chars.has_key(c) is False: continue
+
 			curChar = self.base.Font.chars[c]
-			self.prevCharWidth = self.curCharWidth
+
+			if len(buffer) == 0: buffer = ['' for i in range(self.base.Font.height)]
+
 			self.curCharWidth = self.base.Font.width[c]
 
-
-			"""
-			Calculate the amount of smushing we can do between this char and the last
-			If this is the first char it will throw a series of exceptions which
-			are caught and cause appropriate values to be set for later.
-
-			This differs from C figlet which will just get bogus values from
-			memory and then discard them after.
-			"""
-			maxSmush = self.curCharWidth
-			for row in range(0, self.base.Font.height):
-				lineLeft = buffer[row]
-				lineRight = curChar[row]
-				if self.base.direction == 'right-to-left':
-					lineLeft, lineRight = lineRight, lineLeft
-
-				try:
-					linebd = len(lineLeft.rstrip()) - 1
-					if linebd < 0: linebd = 0
-					ch1 = lineLeft[linebd]
-				except:
-					linebd = 0
-					ch1 = ''
-
-				try:
-					charbd = len(lineRight) - len(lineRight.lstrip())
-					ch2 = lineRight[charbd]
-				except:
-					charbd = len(lineRight)
-					ch2 = ''
-					
-
-				amt = charbd + len(lineLeft) - 1 - linebd
-
-				if ch1 == '' or ch1 == ' ':
-					amt += 1
-				elif ch2 != '' and self.smushChars(left=ch1, right=ch2) is not None:
-					amt += 1
-
-				if amt < maxSmush:
-					maxSmush = amt
-
-			if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0:
-				maxSmush = 0
-
+			maxSmush = self.smushAmount(buffer=buffer, curChar=curChar)
 
 			"""
 			Add a character to the buffer and do smushing/kerning
@@ -428,6 +431,8 @@ class FigletRenderingEngine(object):
 						pass
 
 				buffer[row] = addLeft + addRight[maxSmush:]
+
+			self.prevCharWidth = self.curCharWidth
 
 
 		"""

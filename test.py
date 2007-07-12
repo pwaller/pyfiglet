@@ -24,7 +24,7 @@ def main():
 	ok = 0
 	fail = 0
 	failed = []
-	skip = ['runic']
+	skip = [] #'runic']
 
 	for font in f.getFonts():
 		if font in skip: continue
