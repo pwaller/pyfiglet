@@ -5,10 +5,10 @@ Python FIGlet adaption
 """
 
 import sys
-from optparse import OptionParser
 import os
 import re
 from zipfile import ZipFile
+from optparse import OptionParser
 
 __version__ = '0.3'
 
@@ -186,7 +186,7 @@ class FigletFont(object):
 """
 Rendered figlet font
 """
-class RenderedOutput(str):
+class FigletString(str):
 	def __init__(self, *args, **kwargs):
 		str.__init__(self, *args, **kwargs)
 
@@ -212,7 +212,7 @@ class RenderedOutput(str):
 
 
 	def newFromList(self, list):
-		return RenderedOutput('\n'.join(list) + '\n')
+		return FigletString('\n'.join(list) + '\n')
 
 
 
@@ -425,7 +425,6 @@ class FigletRenderingEngine(object):
 			are caused by index out of range errors which
 			indicate smushing should be skipped.
 			"""
-			templine = ''
 			for row in range(0, self.base.Font.height):
 
 				wBuffer = buffer[row] # row of previously added characters
@@ -442,18 +441,17 @@ class FigletRenderingEngine(object):
 						smushed = self.smushChars(left=left, right=right)
 
 						try:
-							if smushed is not None:
-								l = list(wBuffer)
-								l[len(l)-maxSmush+i] = smushed
-								wBuffer = ''.join(l)
-						except: pass
+							l = list(wBuffer)
+							l[len(l)-maxSmush+i] = smushed
+							wBuffer = ''.join(l)
+						except:
+							pass
 
 					buffer[row] = wBuffer + wChar[maxSmush:]
 
 				elif self.base.direction == 'right-to-left':
-					templine = wChar
 					for i in range(0, maxSmush):
-						try: left = templine[self.curCharWidth - maxSmush + i]
+						try: left = wChar[self.curCharWidth - maxSmush + i]
 						except: left = ''
 
 						right = wBuffer[i]
@@ -461,19 +459,22 @@ class FigletRenderingEngine(object):
 						smushed = self.smushChars(left=left, right=right)
 
 						try:
-							l = list(templine)
+							l = list(wChar)
 							l[self.curCharWidth - maxSmush +i] = smushed
-							templine = ''.join(l)
+							wChar = ''.join(l)
 						except:
 							pass
 
-					templine = templine + wBuffer[maxSmush:]
-					buffer[row] = templine
+					buffer[row] = wChar + wBuffer[maxSmush:]
 
-		# justify text
+		"""
+		Justify text. This does not use str.rjust/str.center
+		specifically because the output would not match FIGlet
+		"""
 		if self.base.justify == 'right':
 			for row in range(0, self.base.Font.height):
 				buffer[row] = (' ' * (self.base.width - len(buffer[row]) - 1)) + buffer[row]
+
 
 		elif self.base.justify == 'center':
 			for row in range(0, self.base.Font.height):
@@ -483,7 +484,8 @@ class FigletRenderingEngine(object):
 		# return rendered ASCII with hardblanks replaced
 		buffer = '\n'.join(buffer) + '\n'
 		buffer = buffer.replace(self.base.Font.hardBlank, ' ')
-		return RenderedOutput(buffer)
+
+		return FigletString(buffer)
 
 
 
