@@ -389,8 +389,7 @@ class FigletRenderingEngine(object):
 	Render an ASCII text string in figlet
 	"""
 	def render(self, text):
-		self.curCharWidth = 0
-		self.prevCharWidth = 0
+		self.curCharWidth = self.prevCharWidth = 0
 		buffer = []
 
 		for c in map(ord, list(text)):
