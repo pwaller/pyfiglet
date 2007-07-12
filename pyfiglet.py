@@ -10,7 +10,7 @@ import os
 import re
 from zipfile import ZipFile
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 __copyright__ = """
 Copyright (C) 2007 Christopher Jones <cjones@insub.org>
