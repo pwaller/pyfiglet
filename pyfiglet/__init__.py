@@ -4,9 +4,10 @@
 Python FIGlet adaption
 """
 
-import sys
 import os
+import pkg_resources
 import re
+import sys
 from zipfile import ZipFile
 from optparse import OptionParser
 
@@ -57,8 +58,7 @@ class FigletFont(object):
     meta-data about how it should be displayed by default
     """
 
-    def __init__(self, dir='.', font='standard'):
-        self.dir = dir
+    def __init__(self, font='standard'):
         self.font = font
 
         self.comment = ''
@@ -69,28 +69,12 @@ class FigletFont(object):
         self.reMagicNumber = re.compile(r'^flf2.')
         self.reEndMarker = re.compile(r'(.)\s*$')
 
-        self.readFontFile()
+        self.data = pkg_resources.resource_string("pyfiglet.fonts", "%s.flf" % font)
         self.loadFont()
 
-    def readFontFile(self):
-        """
-        Load font file into memory. This can be overriden with
-        a superclass to create different font sources.
-        """
-        fontPath = '%s/%s.flf' % (self.dir, self.font)
-        if os.path.exists(fontPath) is False:
-            raise FontNotFound, "%s doesn't exist" % fontPath
-
-        try:
-            fo = open(fontPath, 'rb')
-        except Exception, e:
-            raise FontError, "couldn't open %s: %s" % (fontPath, e)
-
-        try: self.data = fo.read()
-        finally: fo.close()
-
     def getFonts(self):
-        return [font[:-4] for font in os.walk(self.dir).next()[2] if font.endswith('.flf')]
+        raise NotImplementedError("Needs to be made to work with pkg_resources")
+        #return [font[:-4] for font in os.walk(self.dir).next()[2] if font.endswith('.flf')]
 
     def loadFont(self):
         """
@@ -428,39 +412,19 @@ class Figlet(object):
     Main figlet class.
     """
 
-    def __init__(self, dir=None, zipfile=None, font='standard', direction='auto', justify='auto', width=80):
-        self.dir = dir
+    def __init__(self, font='standard', direction='auto', justify='auto', width=80):
         self.font = font
         self._direction = direction
         self._justify = justify
         self.width = width
-        self.zipfile = zipfile
         self.setFont()
         self.engine = FigletRenderingEngine(base=self)
 
     def setFont(self, **kwargs):
-        if kwargs.has_key('dir'):
-            self.dir = kwargs['dir']
-
         if kwargs.has_key('font'):
             self.font = kwargs['font']
-
-        if kwargs.has_key('zipfile'):
-            self.zipfile = kwargs['zipfile']
-
-        Font = None
-        if self.zipfile is not None:
-            try: Font = ZippedFigletFont(dir=self.dir, font=self.font, zipfile=self.zipfile)
-            except: pass
-
-        if Font is None and self.dir is not None:
-            try: Font = FigletFont(dir=self.dir, font=self.font)
-            except: pass
-
-        if Font is None:
-            raise FontNotFound, "Couldn't load font %s: Not found" % self.font
-
-        self.Font = Font
+        
+        self.Font = FigletFont(font=self.font)
 
     def getDirection(self):
         if self._direction == 'auto':
