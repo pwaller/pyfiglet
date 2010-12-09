@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='pyfiglet',
       version='0.4',
@@ -8,6 +8,7 @@ setup(name='pyfiglet',
       author='Christopher Jones',
       author_email='cjones@insub.org',
       url='http://sourceforge.net/projects/pyfiglet/',
-      py_modules=['pyfiglet'],
+      packages=['pyfiglet', 'pyfiglet.fonts'],
+      package_data={'pyfiglet.fonts' : ['pyfiglet/fonts/*.flf']},
 )
 
