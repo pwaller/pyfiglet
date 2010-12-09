@@ -32,6 +32,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 """
 
 
+def figlet_format(text, font="standard", **kwargs):
+    fig = Figlet(font)
+    return fig.renderText(text, **kwargs)
+
+def print_figlet(text, font="standard", **kwargs):
+    print figlet_format(text, font, **kwargs)
+
+
 class FigletError(Exception):
     def __init__(self, error):
         self.error = error
