@@ -33,7 +33,7 @@ def main():
 
 		outputPyfiglet = f.renderText('foo')
 
-		p = Popen('figlet -d ./fonts -f %s foo' % font, shell=True, bufsize=1, stdout=PIPE)
+		p = Popen('figlet -d pyfiglet/fonts -f %s foo' % font, shell=True, bufsize=1, stdout=PIPE)
 		outputFiglet = ''.join(p.stdout.readlines())
 		p.stdout.close()
 		p.wait()
