@@ -437,7 +437,6 @@ def main():
     parser = OptionParser(version=__version__, usage='%prog [options] text..')
     parser.add_option('-f', '--font', default='standard',
             help='font to render with (default: %default)', metavar='FONT')
-    parser.add_option('-d', '--fontdir', default=None, help='location of font files', metavar='DIR')
     parser.add_option('-D', '--direction', type='choice', choices=('auto', 'left-to-right', 'right-to-left'),
             default='auto', metavar='DIRECTION', help='set direction text will be formatted in (default: %default)')
     parser.add_option('-j', '--justify', type='choice', choices=('auto', 'left', 'center', 'right'), default='auto',
@@ -455,7 +454,7 @@ def main():
     text = ' '.join(args)
 
     f = Figlet(
-        dir=opts.fontdir, font=opts.font, direction=opts.direction,
+        font=opts.font, direction=opts.direction,
         justify=opts.justify, width=opts.width,
     )
 
