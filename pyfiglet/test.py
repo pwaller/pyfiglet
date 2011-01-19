@@ -34,10 +34,8 @@ def main():
 		outputPyfiglet = f.renderText('foo')
 
 		p = Popen(('figlet', '-d', 'pyfiglet/fonts', '-f', font, 'foo'),
-		          bufsize=1, stdout=PIPE)
-		outputFiglet = ''.join(p.stdout.readlines())
-		p.stdout.close()
-		p.wait()
+		          stdout=PIPE)
+		outputFiglet = p.communicate()[0]
 
 		if outputPyfiglet == outputFiglet:
 			print '[OK] %s' % font
