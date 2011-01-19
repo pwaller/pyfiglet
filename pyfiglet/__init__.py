@@ -80,8 +80,9 @@ class FigletFont(object):
         self.loadFont()
 
     def getFonts(self):
-        raise NotImplementedError("Needs to be made to work with pkg_resources")
-        #return [font[:-4] for font in os.walk(self.dir).next()[2] if font.endswith('.flf')]
+        return [font.rsplit('.', 2)[0] for font
+                in pkg_resources.resource_listdir('pyfiglet', 'fonts')
+                if font.endswith('.flf')]
 
     def loadFont(self):
         """
