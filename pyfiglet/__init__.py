@@ -8,7 +8,6 @@ import os
 import pkg_resources
 import re
 import sys
-from zipfile import ZipFile
 from optparse import OptionParser
 
 __version__ = '0.5'
@@ -186,40 +185,6 @@ class FigletString(str):
 
     def newFromList(self, list):
         return FigletString('\n'.join(list) + '\n')
-
-
-class ZippedFigletFont(FigletFont):
-    """
-    Use this Font class if it exists inside of a zipfile.
-    """
-
-    def __init__(self, dir='.', font='standard', zipfile='fonts.zip'):
-        self.zipfile = zipfile
-        FigletFont.__init__(self, dir=dir, font=font)
-
-    def readFontFile(self):
-        if os.path.exists(self.zipfile) is False:
-            raise FontNotFound, "%s doesn't exist" % self.zipfile
-
-        fontPath = 'fonts/%s.flf' % self.font
-
-        try:
-            z = ZipFile(self.zipfile, 'r')
-            files = z.namelist()
-            if fontPath not in files:
-                raise FontNotFound, '%s not found in %s' % (self.font, self.zipfile)
-
-            self.data = z.read(fontPath)
-
-        except Exception, e:
-            raise FontError, "couldn't open %s: %s" % (fontPath, e)
-
-    def getFonts(self):
-        if os.path.exists(self.zipfile) is False:
-            raise FontNotFound, "%s doesn't exist" % self.zipfile
-
-        z = ZipFile(self.zipfile, 'r')
-        return [font[6:-4] for font in z.namelist() if font.endswith('.flf')]
 
 
 class FigletRenderingEngine(object):
@@ -473,8 +438,6 @@ def main():
     parser.add_option('-f', '--font', default='standard',
             help='font to render with (default: %default)', metavar='FONT')
     parser.add_option('-d', '--fontdir', default=None, help='location of font files', metavar='DIR')
-    parser.add_option('-z', '--zipfile', default=dir+'/fonts.zip',
-            help='specify a zipfile to use instead of a directory of fonts')
     parser.add_option('-D', '--direction', type='choice', choices=('auto', 'left-to-right', 'right-to-left'),
             default='auto', metavar='DIRECTION', help='set direction text will be formatted in (default: %default)')
     parser.add_option('-j', '--justify', type='choice', choices=('auto', 'left', 'center', 'right'), default='auto',
@@ -493,7 +456,7 @@ def main():
 
     f = Figlet(
         dir=opts.fontdir, font=opts.font, direction=opts.direction,
-        justify=opts.justify, width=opts.width, zipfile=opts.zipfile,
+        justify=opts.justify, width=opts.width,
     )
 
     r = f.renderText(text)

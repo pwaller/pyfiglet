@@ -19,7 +19,7 @@ def main():
 
 	opts, args = parser.parse_args()
 
-	f = Figlet(zipfile='fonts.zip')
+	f = Figlet()
 
 	ok = 0
 	fail = 0
