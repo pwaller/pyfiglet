@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os.path
 import sys
 from optparse import OptionParser
 from pyfiglet import Figlet
@@ -34,8 +35,14 @@ def main():
 
         outputPyfiglet = f.renderText('foo')
 
-        p = Popen(('figlet', '-d', 'pyfiglet/fonts', '-f', font, 'foo'),
-                  bufsize=1, stdout=PIPE)
+        fontpath = os.path.join('pyfiglet', 'fonts', font)
+        if os.path.isfile(fontpath + '.flf'):
+            cmd = ('figlet', '-d', 'pyfiglet/fonts', '-f', font, 'foo')
+        elif os.path.isfile(fontpath + '.tlf'):
+            cmd = ('toilet', '-d', 'pyfiglet/fonts', '-f', font, 'foo')
+        else:
+            raise Exception('Missing font file')
+        p = Popen(cmd, bufsize=1, stdout=PIPE)
         outputFiglet = ''.join(p.stdout.readlines())
         p.stdout.close()
         p.wait()
