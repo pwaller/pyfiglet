@@ -65,6 +65,9 @@ class FigletFont(object):
     meta-data about how it should be displayed by default
     """
 
+    reMagicNumber = re.compile(r'^flf2.')
+    reEndMarker = re.compile(r'(.)\s*$')
+
     def __init__(self, font='standard'):
         self.font = font
 
@@ -72,9 +75,6 @@ class FigletFont(object):
         self.chars = {}
         self.width = {}
         self.data = None
-
-        self.reMagicNumber = re.compile(r'^flf2.')
-        self.reEndMarker = re.compile(r'(.)\s*$')
 
         self.data = pkg_resources.resource_string("pyfiglet.fonts", "%s.flf" % font)
         self.loadFont()
