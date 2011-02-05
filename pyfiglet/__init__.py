@@ -79,6 +79,7 @@ class FigletFont(object):
         self.data = pkg_resources.resource_string("pyfiglet.fonts", "%s.flf" % font)
         self.loadFont()
 
+    @classmethod
     def getFonts(self):
         return [font.rsplit('.', 2)[0] for font
                 in pkg_resources.resource_listdir('pyfiglet', 'fonts')
