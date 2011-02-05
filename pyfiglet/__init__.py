@@ -30,12 +30,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 """
 
+DEFAULT_FONT='standard'
 
-def figlet_format(text, font="standard", **kwargs):
+
+def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font)
     return fig.renderText(text, **kwargs)
 
-def print_figlet(text, font="standard", **kwargs):
+def print_figlet(text, font=DEFAULT_FONT, **kwargs):
     print figlet_format(text, font, **kwargs)
 
 
@@ -65,7 +67,7 @@ class FigletFont(object):
     meta-data about how it should be displayed by default
     """
 
-    def __init__(self, font='standard'):
+    def __init__(self, font=DEFAULT_FONT):
         self.font = font
 
         self.comment = ''
@@ -383,7 +385,8 @@ class Figlet(object):
     Main figlet class.
     """
 
-    def __init__(self, font='standard', direction='auto', justify='auto', width=80):
+    def __init__(self, font=DEFAULT_FONT, direction='auto', justify='auto',
+                 width=80):
         self.font = font
         self._direction = direction
         self._justify = justify
@@ -436,7 +439,7 @@ def main():
     dir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
     parser = OptionParser(version=__version__, usage='%prog [options] text..')
-    parser.add_option('-f', '--font', default='standard',
+    parser.add_option('-f', '--font', default=DEFAULT_FONT,
             help='font to render with (default: %default)', metavar='FONT')
     parser.add_option('-D', '--direction', type='choice', choices=('auto', 'left-to-right', 'right-to-left'),
             default='auto', metavar='DIRECTION', help='set direction text will be formatted in (default: %default)')
