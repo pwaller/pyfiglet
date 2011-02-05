@@ -42,10 +42,9 @@ def main():
             cmd = ('toilet', '-d', 'pyfiglet/fonts', '-f', font, 'foo')
         else:
             raise Exception('Missing font file')
-        p = Popen(cmd, bufsize=1, stdout=PIPE)
-        outputFiglet = ''.join(p.stdout.readlines())
-        p.stdout.close()
-        p.wait()
+            
+        p = Popen(cmd, bufsize=1,stdout=PIPE)
+        outputFiglet = p.communicate()[0]
 
         if outputPyfiglet == outputFiglet:
             print '[OK] %s' % font
