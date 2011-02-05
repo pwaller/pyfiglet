@@ -3,11 +3,11 @@
 from setuptools import setup
 
 setup(name='pyfiglet',
-      version='0.4',
+      version='0.5dev',
       description='Pure-python FIGlet implementation',
-      author='Christopher Jones',
-      author_email='cjones@insub.org',
-      url='http://sourceforge.net/projects/pyfiglet/',
+      author='Peter Waller (Thanks to Christopher Jones and Stefano Rivera)',
+      author_email='peter.waller@gmail.com',
+      url='https://github.com/pwaller/pyfiglet',
       packages=['pyfiglet', 'pyfiglet.fonts'],
       package_data={'pyfiglet.fonts' : ['pyfiglet/fonts/*.flf']},
 )
