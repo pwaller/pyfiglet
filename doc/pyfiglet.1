@@ -1,0 +1,43 @@
+.TH PYFIGLET "1" "June 2011" "pyfiglet 0.6" "User Commands"
+.SH NAME
+pyfiglet \- display text in large ASCII art fonts.
+.SH SYNOPSIS
+.B pyfiglet.py
+[\fIoptions\fR] \fItext\fR...
+.SH DESCRIPTION
+pyFIGlet is a program that creates large characters out of ordinary
+screen characters.
+It takes ASCII text (\fItext\fR) and renders it in ASCII art fonts.
+.P
+This version of pyfiglet supports FIGlet fonts \fB.flf\fR and
+the FIGlet-compatible toilet-fonts \fB.tlf\fR.
+.SH OPTIONS
+.TP
+\fB\-\-version\fR
+show program's version number and exit
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.TP
+\fB\-f\fR \fIFONT\fR, \fB\-\-font\fR=\fIFONT\fR
+font to render with (default: future)
+.TP
+\fB\-D\fR \fIDIRECTION\fR, \fB\-\-direction\fR=\fIDIRECTION\fR
+set direction text will be formatted in (default:
+auto)
+.TP
+\fB\-j\fR \fISIDE\fR, \fB\-\-justify\fR=\fISIDE\fR
+set justification, defaults to print direction
+.TP
+\fB\-w\fR \fICOLS\fR, \fB\-\-width\fR=\fICOLS\fR
+set terminal width for wrapping/justification
+(default: 80)
+.TP
+\fB\-r\fR, \fB\-\-reverse\fR
+shows mirror image of output text
+.TP
+\fB\-F\fR, \fB\-\-flip\fR
+flips rendered output text over
+.SH "SEE ALSO"
+.BR toilet (1),
+.BR figlet (1)
