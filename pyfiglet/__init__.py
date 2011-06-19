@@ -10,7 +10,7 @@ import re
 import sys
 from optparse import OptionParser
 
-__version__ = '0.6'
+__version__ = '0.6.1dev'
 __author__ = 'Peter Waller <peter.waller@gmail.com>'
 __copyright__ = """
 Copyright (C) 2007 Christopher Jones <cjones@gruntle.org>
