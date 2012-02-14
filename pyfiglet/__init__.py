@@ -337,13 +337,12 @@ class FigletRenderingEngine(object):
         Render an ASCII text string in figlet
         """
         self.curCharWidth = self.prevCharWidth = 0
-        buffer = []
+        buffer = ['' for i in range(self.base.Font.height)]
 
         for c in map(ord, list(text)):
             if self.base.Font.chars.has_key(c) is False: continue
             curChar = self.base.Font.chars[c]
             self.curCharWidth = self.base.Font.width[c]
-            if len(buffer) == 0: buffer = ['' for i in range(self.base.Font.height)]
             maxSmush = self.smushAmount(buffer=buffer, curChar=curChar)
 
             # Add a character to the buffer and do smushing/kerning
