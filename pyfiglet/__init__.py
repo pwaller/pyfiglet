@@ -304,19 +304,21 @@ class FigletRenderingEngine(object):
             lineRight = curChar[row]
             if self.base.direction == 'right-to-left':
                 lineLeft, lineRight = lineRight, lineLeft
-
-            try:
-                linebd = len(lineLeft.rstrip()) - 1
-                if linebd < 0: linebd = 0
+            
+            linebd = len(lineLeft.rstrip()) - 1
+            if linebd < 0:
+                linebd = 0
+                
+            if linebd < len(lineLeft):
                 ch1 = lineLeft[linebd]
-            except:
+            else:
                 linebd = 0
                 ch1 = ''
 
-            try:
-                charbd = len(lineRight) - len(lineRight.lstrip())
+            charbd = len(lineRight) - len(lineRight.lstrip())
+            if charbd < len(lineRight):
                 ch2 = lineRight[charbd]
-            except:
+            else:
                 charbd = len(lineRight)
                 ch2 = ''
 
@@ -355,19 +357,21 @@ class FigletRenderingEngine(object):
 
                 for i in range(0, maxSmush):
 
-                    try: left = addLeft[len(addLeft) - maxSmush + i]
-                    except: left = ''
+                    idx = len(addLeft) - maxSmush + i
+                    if idx >= 0 and idx < len(addLeft):
+                        left = addLeft[idx]
+                    else:
+                        left = ''
 
                     right = addRight[i]
 
                     smushed = self.smushChars(left=left, right=right)
 
-                    try:
-                        l = list(addLeft)
-                        l[len(l)-maxSmush+i] = smushed
+                    l = list(addLeft)
+                    idx = len(l)-maxSmush+i
+                    if idx >= 0 and idx < len(l):
+                        l[idx] = smushed
                         addLeft = ''.join(l)
-                    except:
-                        pass
 
                 buffer[row] = addLeft + addRight[maxSmush:]
 
