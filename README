@@ -51,7 +51,7 @@ USAGE
 	Run with --help to see a full list of tweaks.  Mostly you will only
 	use -f to change the font. It defaults to standard.flf.
 
-	./tools/pyfiglet 'text to render'
+	tools/pyfiglet 'text to render'
 
 	Pyfiglet is also a library that can be used in python code:
 
