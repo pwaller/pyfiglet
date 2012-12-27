@@ -1,6 +1,6 @@
 *.pyc
 *~
-*.swp
-build/
-dist/
-pyfiglet.egg-info/
+.*.swp
+/build/
+/dist/
+/pyfiglet.egg-info/
