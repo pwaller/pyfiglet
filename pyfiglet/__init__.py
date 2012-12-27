@@ -78,17 +78,20 @@ class FigletFont(object):
         self.comment = ''
         self.chars = {}
         self.width = {}
-        self.data = None
+        self.data = self.preloadFont(font)
+        self.loadFont()
 
+    @classmethod
+    def preloadFont(self, font):
+        """
+        Load font data if exist
+        """
         for extension in ('tlf', 'flf'):
             fn = '%s.%s' % (font, extension)
             if pkg_resources.resource_exists('pyfiglet.fonts', fn):
-                self.data = pkg_resources.resource_string('pyfiglet.fonts', fn)
-                break
+                return pkg_resources.resource_string('pyfiglet.fonts', fn)
         else:
             raise FontNotFound(font)
-
-        self.loadFont()
 
     @classmethod
     def getFonts(self):
@@ -97,6 +100,23 @@ class FigletFont(object):
                 if font.endswith(('.flf', '.tlf'))
                    and self.reMagicNumber.search(pkg_resources.resource_stream(
                         'pyfiglet.fonts', font).readline())]
+
+    @classmethod
+    def infoFont(self, font, short=False):
+        """
+        Get informations of font
+        """
+        data = FigletFont.preloadFont(font)
+        infos = []
+        reMagicNumber = re.compile(r'^[tf]lf2.')
+        reStartMarker = re.compile(r'^(FONT|COMMENT|FONTNAME_REGISTRY|FAMILY_NAME|FOUNDRY|WEIGHT_NAME|SETWIDTH_NAME|SLANT|ADD_STYLE_NAME|PIXEL_SIZE|POINT_SIZE|RESOLUTION_X|RESOLUTION_Y|SPACING|AVERAGE_WIDTH|COMMENT|FONT_DESCENT|FONT_ASCENT|CAP_HEIGHT|X_HEIGHT|FACE_NAME|FULL_NAME|COPYRIGHT|_DEC_|DEFAULT_CHAR|NOTICE|RELATIVE_).*')
+        reEndMarker = re.compile(r'^.*[@#$]$')
+        for line in  data.splitlines()[0:100]:
+            if reMagicNumber.search(line) is None \
+               and reStartMarker.search(line) is None \
+               and reEndMarker.search(line) is None:
+                infos.append(line)
+        return '\n'.join(infos) if not short else infos[0]
 
     def loadFont(self):
         """
@@ -451,7 +471,7 @@ class Figlet(object):
 
 
 def main():
-    parser = OptionParser(version=__version__, usage='%prog [options] text..')
+    parser = OptionParser(version=__version__, usage='%prog [options] [text..]')
     parser.add_option('-f', '--font', default=DEFAULT_FONT,
             help='font to render with (default: %default)', metavar='FONT')
     parser.add_option('-D', '--direction', type='choice', choices=('auto', 'left-to-right', 'right-to-left'),
@@ -462,7 +482,17 @@ def main():
             help='set terminal width for wrapping/justification (default: %default)' )
     parser.add_option('-r', '--reverse', action='store_true', default=False, help='shows mirror image of output text')
     parser.add_option('-F', '--flip', action='store_true', default=False, help='flips rendered output text over')
+    parser.add_option('-l', '--list_fonts', action='store_true', default=False, help='show installed fonts list')
+    parser.add_option('-i', '--info_font', action='store_true', default=False, help='show font\'s information, use with -f FONT')
     opts, args = parser.parse_args()
+
+    if opts.list_fonts:
+        print FigletFont.getFonts()
+        exit(0)
+
+    if opts.info_font:
+        print FigletFont.infoFont(opts.font)
+        exit(0)
 
     if len(args) == 0:
         parser.print_help()
