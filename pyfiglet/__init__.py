@@ -82,7 +82,7 @@ class FigletFont(object):
         self.loadFont()
 
     @classmethod
-    def preloadFont(self, font):
+    def preloadFont(cls, font):
         """
         Load font data if exist
         """
@@ -94,15 +94,15 @@ class FigletFont(object):
             raise FontNotFound(font)
 
     @classmethod
-    def getFonts(self):
+    def getFonts(cls):
         return [font.rsplit('.', 2)[0] for font
                 in pkg_resources.resource_listdir('pyfiglet', 'fonts')
                 if font.endswith(('.flf', '.tlf'))
-                   and self.reMagicNumber.search(pkg_resources.resource_stream(
+                   and cls.reMagicNumber.search(pkg_resources.resource_stream(
                         'pyfiglet.fonts', font).readline())]
 
     @classmethod
-    def infoFont(self, font, short=False):
+    def infoFont(cls, font, short=False):
         """
         Get informations of font
         """
