@@ -1,0 +1,15 @@
+#!/bin/bash
+PWD=$(dirname $0);
+PYFIGLET='./pyfiglet'
+OUTPUT=./pyfiglet_example.txt
+cd $PWD
+if [[ ! -f $PYFIGLET ]]; then
+    echo "Error ! can't find $PYFIGLET!"
+fi
+
+FONTS=$($PYFIGLET -l | sed -e "s/[',]//g" -e 's/^\[//g' -e 's/\]$//g')
+rm $OUTPUT 2>/dev/null
+for font in $FONTS; do
+    echo $font | tee -a $OUTPUT
+    $PYFIGLET pyfiglet -f $font | tee -a $OUTPUT
+done
