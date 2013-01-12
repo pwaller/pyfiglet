@@ -1,6 +1,7 @@
 #!/bin/sh
 PYFIGLET='./pyfiglet'
 OUTPUT='/tmp/pyfiglet_example.log'
+TEXT='pyfiglet'
 LOG=0
 
 cd "$(dirname "$0")"
@@ -21,12 +22,12 @@ print_samples() {
 
     for font in $fonts; do
         echo "$font" | tee -a "$output"
-        "$PYFIGLET" pyfiglet -f "$font" | tee -a "$output"
+        "$PYFIGLET" "$TEXT" -f "$font" | tee -a "$output"
     done
 }
 
 useage() {
-    echo "Useage: $0 [options]\n"
+    echo "Useage: $0 [options] [text ...]\n"
     echo "Options:"
     echo "-l\t\t\tcreate log file."
     echo "-o [path_to_file]\tspecify the path of log file,\n\t\t\tdefault is $OUTPUT."
@@ -38,7 +39,6 @@ useage() {
 while getopts ":lo:h" opt; do
     case "$opt" in
         l)
-            echo "get L !"
             LOG=1
             ;;
         o)
@@ -51,6 +51,10 @@ while getopts ":lo:h" opt; do
             ;;
     esac
 done
+shift `expr $OPTIND - 1`
+if [ ! -z "$1" ]; then
+    TEXT="$@"
+fi
 
 #. main 
 print_samples
