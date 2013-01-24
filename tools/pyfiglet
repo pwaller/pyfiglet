@@ -1,3 +1,5 @@
 #!/bin/sh
 
-exec python "$(dirname "$0")"/../pyfiglet/__init__.py "$@"
+cd "$(dirname "$0")"/..
+export PYTHONPATH=$(pwd)
+exec python pyfiglet/__init__.py "$@"
