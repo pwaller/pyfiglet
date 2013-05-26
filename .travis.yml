@@ -4,4 +4,4 @@ python:
  - "2.6"
  - "2.7"
  - "pypy"
-script: python pyfiglet/test.py
+script: PYTHONPATH=. python pyfiglet/test.py
