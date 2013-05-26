@@ -4,7 +4,7 @@ import os.path
 import sys
 from optparse import OptionParser
 from pyfiglet import Figlet
-from subprocess import Popen, STDOUT, PIPE
+from subprocess import Popen, PIPE
 
 __version__ = '0.1'
 

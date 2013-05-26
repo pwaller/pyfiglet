@@ -4,7 +4,6 @@
 Python FIGlet adaption
 """
 
-import os
 import pkg_resources
 import re
 import sys
@@ -138,12 +137,11 @@ class FigletFont(object):
 
             hardBlank = header[0]
             height, baseLine, maxLength, oldLayout, commentLines = map(int, header[1:6])
-            printDirection = fullLayout = codeTagCount = None
+            printDirection = fullLayout = None
 
             # these are all optional for backwards compat
             if len(header) > 6: printDirection = int(header[6])
             if len(header) > 7: fullLayout = int(header[7])
-            if len(header) > 8: codeTagCount = int(header[8])
 
             # if the new layout style isn't available,
             # convert old layout style. backwards compatability
