@@ -165,7 +165,6 @@ class FigletFont(object):
             for i in range(0, commentLines):
                 self.comment += data.pop(0)
 
-
             def __char(data):
                 """
                 Function loads one character in the internal array from font
@@ -197,8 +196,6 @@ class FigletFont(object):
             while data:
                 line = data.pop(0).strip()
                 i = line.split(' ', 1)[0]
-                if (i == '0x0442'):
-                    print 'HEYHEY'
                 if (i == ''):
                     continue
                 hex_match = re.search('^0x', i, re.IGNORECASE)
