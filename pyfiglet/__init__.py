@@ -4,6 +4,7 @@
 Python FIGlet adaption
 """
 
+from __future__ import print_function
 import pkg_resources
 import re
 import sys
@@ -35,8 +36,8 @@ DEFAULT_FONT='standard'
 
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
-    fig = Figlet(font)
-    return fig.renderText(text, **kwargs)
+    fig = Figlet(font, **kwargs)
+    return fig.renderText(text)
 
 def print_figlet(text, font=DEFAULT_FONT, **kwargs):
     print(figlet_format(text, font, **kwargs))
