@@ -90,7 +90,7 @@ class FigletFont(object):
             fn = '%s.%s' % (font, extension)
             if pkg_resources.resource_exists('pyfiglet.fonts', fn):
                 data = pkg_resources.resource_string('pyfiglet.fonts', fn)
-                data = data.decode('ascii')
+                data = data.decode('ascii', errors='ignore')
                 return data
         else:
             raise FontNotFound(font)
