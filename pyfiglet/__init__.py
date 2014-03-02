@@ -90,7 +90,7 @@ class FigletFont(object):
             fn = '%s.%s' % (font, extension)
             if pkg_resources.resource_exists('pyfiglet.fonts', fn):
                 data = pkg_resources.resource_string('pyfiglet.fonts', fn)
-                data = data.decode('ascii', errors='ignore')
+                data = data.decode('ascii', 'replace')
                 return data
         else:
             raise FontNotFound(font)
@@ -101,7 +101,7 @@ class FigletFont(object):
                 in pkg_resources.resource_listdir('pyfiglet', 'fonts')
                 if font.endswith(('.flf', '.tlf'))
                    and cls.reMagicNumber.search(pkg_resources.resource_stream(
-                        'pyfiglet.fonts', font).readline().decode('ascii', errors='ignore'))]
+                        'pyfiglet.fonts', font).readline().decode('ascii', 'replace'))]
 
     @classmethod
     def infoFont(cls, font, short=False):
