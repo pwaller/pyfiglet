@@ -39,7 +39,7 @@ def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     return fig.renderText(text, **kwargs)
 
 def print_figlet(text, font=DEFAULT_FONT, **kwargs):
-    print figlet_format(text, font, **kwargs)
+    print(figlet_format(text, font, **kwargs))
 
 
 class FigletError(Exception):
@@ -88,7 +88,9 @@ class FigletFont(object):
         for extension in ('tlf', 'flf'):
             fn = '%s.%s' % (font, extension)
             if pkg_resources.resource_exists('pyfiglet.fonts', fn):
-                return pkg_resources.resource_string('pyfiglet.fonts', fn)
+                data = pkg_resources.resource_string('pyfiglet.fonts', fn)
+                data = data.decode('ascii')
+                return data
         else:
             raise FontNotFound(font)
 
@@ -131,7 +133,7 @@ class FigletFont(object):
 
             header = self.reMagicNumber.sub('', header)
             header = header.split()
-            
+
             if len(header) < 6:
                 raise FontError('malformed header for %s' % self.font)
 
@@ -322,11 +324,11 @@ class FigletRenderingEngine(object):
             lineRight = curChar[row]
             if self.base.direction == 'right-to-left':
                 lineLeft, lineRight = lineRight, lineLeft
-            
+
             linebd = len(lineLeft.rstrip()) - 1
             if linebd < 0:
                 linebd = 0
-                
+
             if linebd < len(lineLeft):
                 ch1 = lineLeft[linebd]
             else:
@@ -360,7 +362,7 @@ class FigletRenderingEngine(object):
         buffer = ['' for i in range(self.base.Font.height)]
 
         for c in map(ord, list(text)):
-            if self.base.Font.chars.has_key(c) is False: continue
+            if not c in self.base.Font.chars: continue
             curChar = self.base.Font.chars[c]
             self.curCharWidth = self.base.Font.width[c]
             maxSmush = self.smushAmount(buffer=buffer, curChar=curChar)
@@ -428,9 +430,9 @@ class Figlet(object):
         self.engine = FigletRenderingEngine(base=self)
 
     def setFont(self, **kwargs):
-        if kwargs.has_key('font'):
+        if 'font' in kwargs:
             self.font = kwargs['font']
-        
+
         self.Font = FigletFont(font=self.font)
 
     def getDirection(self):
@@ -485,11 +487,11 @@ def main():
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
-        print FigletFont.getFonts()
+        print(FigletFont.getFonts())
         exit(0)
 
     if opts.info_font:
-        print FigletFont.infoFont(opts.font)
+        print(FigletFont.infoFont(opts.font))
         exit(0)
 
     if len(args) == 0:
@@ -506,7 +508,7 @@ def main():
     r = f.renderText(text)
     if opts.reverse is True: r = r.reverse()
     if opts.flip is True: r = r.flip()
-    print r
+    print(r)
 
     return 0
 
