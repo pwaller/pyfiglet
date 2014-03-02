@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os.path
 import sys
 from optparse import OptionParser
@@ -10,7 +11,7 @@ __version__ = '0.1'
 
 def dump(text):
     for line in text.split('\n'):
-        print repr(line)
+        print(repr(line))
 
 def main():
     parser = OptionParser(version=__version__)
@@ -41,30 +42,30 @@ def main():
         elif os.path.isfile(fontpath + '.tlf'):
             cmd = ('toilet', '-d', 'pyfiglet/fonts', '-f', font, 'foo')
         else:
-            raise Exception('Missing font file')
-            
+            raise Exception('Missing font file: '+fontpath)
+
         p = Popen(cmd, bufsize=1,stdout=PIPE)
         outputFiglet = p.communicate()[0]
 
         if outputPyfiglet == outputFiglet:
-            print '[OK] %s' % font
+            print('[OK] %s' % font)
             ok += 1
             continue
 
-        print '[FAIL] %s' % font
+        print('[FAIL] %s' % font)
         fail += 1
         failed.append(font)
 
         if opts.show is True:
-            print '[PYTHON] *** %s\n\n' % font
+            print('[PYTHON] *** %s\n\n' % font)
             dump(outputPyfiglet)
-            print '[FIGLET] *** %s\n\n' % font
+            print('[FIGLET] *** %s\n\n' % font)
             dump(outputFiglet)
             raw_input()
 
-    print 'OK = %d, FAIL = %d' % (ok, fail)
+    print('OK = %d, FAIL = %d' % (ok, fail))
     if len(failed) > 0:
-        print 'FAILED = %s' % repr(failed)
+        print('FAILED = %s' % repr(failed))
 
     return 0
 
