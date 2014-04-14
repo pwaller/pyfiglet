@@ -32,6 +32,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 """
 
+
 DEFAULT_FONT='standard'
 
 
@@ -167,8 +168,11 @@ class FigletFont(object):
             for i in range(0, commentLines):
                 self.comment += data.pop(0)
 
-            # Load characters
-            for i in range(32, 127):
+            def __char(data):
+                """
+                Function loads one character in the internal array from font
+                file content
+                """
                 end = None
                 width = 0
                 chars = []
@@ -182,10 +186,28 @@ class FigletFont(object):
 
                     if len(line) > width: width = len(line)
                     chars.append(line)
+                return width, chars
 
-                if ''.join(chars) != '':
-                    self.chars[i] = chars
+            # Load ASCII standard character set (32 - 127)
+            for i in range(32, 127):
+                width, letter = __char(data)
+                if ''.join(letter) != '':
+                    self.chars[i] = letter
                     self.width[i] = width
+
+            # Load ASCII extended character set
+            while data:
+                line = data.pop(0).strip()
+                i = line.split(' ', 1)[0]
+                if (i == ''):
+                    continue
+                hex_match = re.search('^0x', i, re.IGNORECASE)
+                if hex_match is not None:
+                    i = int(i, 16)
+                    width, letter = __char(data)
+                    if ''.join(letter) != '':
+                        self.chars[i] = letter
+                        self.width[i] = width
 
         except Exception as e:
             raise FontError('problem parsing %s font: %s' % (self.font, e))
