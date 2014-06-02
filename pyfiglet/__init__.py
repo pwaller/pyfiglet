@@ -511,7 +511,7 @@ def main():
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
-        print(FigletFont.getFonts())
+        print('\n'.join(sorted(FigletFont.getFonts())))
         exit(0)
 
     if opts.info_font:
