@@ -45,7 +45,7 @@ def main():
             raise Exception('Missing font file: '+fontpath)
 
         p = Popen(cmd, bufsize=1,stdout=PIPE)
-        outputFiglet = p.communicate()[0].decode('ascii', 'replace')
+        outputFiglet = p.communicate()[0].decode('UTF-8')
 
         if outputPyfiglet == outputFiglet:
             print('[OK] %s' % font)
