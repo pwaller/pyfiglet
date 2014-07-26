@@ -98,12 +98,18 @@ class FigletFont(object):
             raise FontNotFound(font)
 
     @classmethod
+    def isValidFont(cls, font):
+        if not font.endswith(('.flf', '.tlf')):
+            return False
+        f = pkg_resources.resource_stream('pyfiglet.fonts', font)
+        header = f.readline().decode('UTF-8', 'replace')
+        return cls.reMagicNumber.search(header)
+
+    @classmethod
     def getFonts(cls):
         return [font.rsplit('.', 2)[0] for font
                 in pkg_resources.resource_listdir('pyfiglet', 'fonts')
-                if font.endswith(('.flf', '.tlf'))
-                   and cls.reMagicNumber.search(pkg_resources.resource_stream(
-                        'pyfiglet.fonts', font).readline().decode('UTF-8', 'replace'))]
+                if cls.isValidFont(font)]
 
     @classmethod
     def infoFont(cls, font, short=False):
