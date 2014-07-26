@@ -118,7 +118,12 @@ class FigletFont(object):
         """
         data = FigletFont.preloadFont(font)
         infos = []
-        reStartMarker = re.compile(r'^(FONT|COMMENT|FONTNAME_REGISTRY|FAMILY_NAME|FOUNDRY|WEIGHT_NAME|SETWIDTH_NAME|SLANT|ADD_STYLE_NAME|PIXEL_SIZE|POINT_SIZE|RESOLUTION_X|RESOLUTION_Y|SPACING|AVERAGE_WIDTH|COMMENT|FONT_DESCENT|FONT_ASCENT|CAP_HEIGHT|X_HEIGHT|FACE_NAME|FULL_NAME|COPYRIGHT|_DEC_|DEFAULT_CHAR|NOTICE|RELATIVE_).*')
+        reStartMarker = re.compile(r"""
+            ^(FONT|COMMENT|FONTNAME_REGISTRY|FAMILY_NAME|FOUNDRY|WEIGHT_NAME|
+              SETWIDTH_NAME|SLANT|ADD_STYLE_NAME|PIXEL_SIZE|POINT_SIZE|
+              RESOLUTION_X|RESOLUTION_Y|SPACING|AVERAGE_WIDTH|COMMENT|
+              FONT_DESCENT|FONT_ASCENT|CAP_HEIGHT|X_HEIGHT|FACE_NAME|FULL_NAME|
+              COPYRIGHT|_DEC_|DEFAULT_CHAR|NOTICE|RELATIVE_).*""", re.VERBOSE)
         reEndMarker = re.compile(r'^.*[@#$]$')
         for line in  data.splitlines()[0:100]:
             if cls.reMagicNumber.search(line) is None \
