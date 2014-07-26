@@ -9,9 +9,11 @@ from subprocess import Popen, PIPE
 
 __version__ = '0.1'
 
+
 def dump(text):
     for line in text.split('\n'):
         print(repr(line))
+
 
 def main():
     parser = OptionParser(version=__version__)
@@ -27,10 +29,11 @@ def main():
     ok = 0
     fail = 0
     failed = []
-    skip = ['runic'] # known bug..
+    skip = ['runic']  # known bug..
 
     for font in f.getFonts():
-        if font in skip: continue
+        if font in skip:
+            continue
 
         f.setFont(font=font)
 
@@ -44,7 +47,7 @@ def main():
         else:
             raise Exception('Missing font file: '+fontpath)
 
-        p = Popen(cmd, bufsize=1,stdout=PIPE)
+        p = Popen(cmd, bufsize=1, stdout=PIPE)
         outputFiglet = p.communicate()[0].decode('UTF-8')
 
         # Our TLF rendering isn't perfect, yet
@@ -75,4 +78,6 @@ def main():
 
     return 0
 
-if __name__ == '__main__': sys.exit(main())
+
+if __name__ == '__main__':
+    sys.exit(main())

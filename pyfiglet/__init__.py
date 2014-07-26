@@ -34,12 +34,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 """
 
 
-DEFAULT_FONT='standard'
+DEFAULT_FONT = 'standard'
 
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
     return fig.renderText(text)
+
 
 def print_figlet(text, font=DEFAULT_FONT, **kwargs):
     print(figlet_format(text, font, **kwargs))
@@ -125,10 +126,10 @@ class FigletFont(object):
               FONT_DESCENT|FONT_ASCENT|CAP_HEIGHT|X_HEIGHT|FACE_NAME|FULL_NAME|
               COPYRIGHT|_DEC_|DEFAULT_CHAR|NOTICE|RELATIVE_).*""", re.VERBOSE)
         reEndMarker = re.compile(r'^.*[@#$]$')
-        for line in  data.splitlines()[0:100]:
-            if cls.reMagicNumber.search(line) is None \
-               and reStartMarker.search(line) is None \
-               and reEndMarker.search(line) is None:
+        for line in data.splitlines()[0:100]:
+            if (cls.reMagicNumber.search(line) is None
+                    and reStartMarker.search(line) is None
+                    and reEndMarker.search(line) is None):
                 infos.append(line)
         return '\n'.join(infos) if not short else infos[0]
 
@@ -151,12 +152,15 @@ class FigletFont(object):
                 raise FontError('malformed header for %s' % self.font)
 
             hardBlank = header[0]
-            height, baseLine, maxLength, oldLayout, commentLines = map(int, header[1:6])
+            height, baseLine, maxLength, oldLayout, commentLines = map(
+                int, header[1:6])
             printDirection = fullLayout = None
 
             # these are all optional for backwards compat
-            if len(header) > 6: printDirection = int(header[6])
-            if len(header) > 7: fullLayout = int(header[7])
+            if len(header) > 6:
+                printDirection = int(header[6])
+            if len(header) > 7:
+                fullLayout = int(header[7])
 
             # if the new layout style isn't available,
             # convert old layout style. backwards compatability
@@ -195,7 +199,8 @@ class FigletFont(object):
 
                     line = end.sub('', line)
 
-                    if len(line) > width: width = len(line)
+                    if len(line) > width:
+                        width = len(line)
                     chars.append(line)
                 return width, chars
 
@@ -310,39 +315,49 @@ class FigletRenderingEngine(object):
         self.SM_KERN = 64
         self.SM_SMUSH = 128
 
-
     def smushChars(self, left='', right=''):
         """
         Given 2 characters which represent the edges rendered figlet
         fonts where they would touch, see if they can be smushed together.
         Returns None if this cannot or should not be done.
         """
-        if left.isspace() is True: return right
-        if right.isspace() is True: return left
+        if left.isspace() is True:
+            return right
+        if right.isspace() is True:
+            return left
 
-        # Disallows overlapping if previous or current char has a width of 1 or zero
-        if (self.prevCharWidth < 2) or (self.curCharWidth < 2): return
+        # Disallows overlapping if previous or current char has a width of 1 or
+        # zero
+        if (self.prevCharWidth < 2) or (self.curCharWidth < 2):
+            return
 
         # kerning only
-        if (self.base.Font.smushMode & self.SM_SMUSH) == 0: return
+        if (self.base.Font.smushMode & self.SM_SMUSH) == 0:
+            return
 
         # smushing by universal overlapping
         if (self.base.Font.smushMode & 63) == 0:
             # Ensure preference to visiable characters.
-            if left == self.base.Font.hardBlank: return right
-            if right == self.base.Font.hardBlank: return left
+            if left == self.base.Font.hardBlank:
+                return right
+            if right == self.base.Font.hardBlank:
+                return left
 
             # Ensures that the dominant (foreground)
             # fig-character for overlapping is the latter in the
             # user's text, not necessarily the rightmost character.
-            if self.base.direction == 'right-to-left': return left
-            else: return right
+            if self.base.direction == 'right-to-left':
+                return left
+            else:
+                return right
 
         if self.base.Font.smushMode & self.SM_HARDBLANK:
-            if left == self.base.Font.hardBlank and right == self.base.Font.hardBlank:
+            if (left == self.base.Font.hardBlank
+                    and right == self.base.Font.hardBlank):
                 return left
 
-        if left == self.base.Font.hardBlank or right == self.base.Font.hardBlank:
+        if (left == self.base.Font.hardBlank
+                or right == self.base.Font.hardBlank):
             return
 
         if self.base.Font.smushMode & self.SM_EQUAL:
@@ -371,25 +386,29 @@ class FigletRenderingEngine(object):
 
         if self.base.Font.smushMode & self.SM_PAIR:
             for pair in [left+right, right+left]:
-                if pair in ['[]', '{}', '()']: return '|'
+                if pair in ['[]', '{}', '()']:
+                    return '|'
 
         if self.base.Font.smushMode & self.SM_BIGX:
-            if (left == '/') and (right == '\\'): return '|'
-            if (right == '/') and (left == '\\'): return 'Y'
-            if (left == '>') and (right == '<'): return 'X'
-
+            if (left == '/') and (right == '\\'):
+                return '|'
+            if (right == '/') and (left == '\\'):
+                return 'Y'
+            if (left == '>') and (right == '<'):
+                return 'X'
         return
 
     def smushAmount(self, left=None, right=None, buffer=[], curChar=[]):
         """
-        Calculate the amount of smushing we can do between this char and the last
-        If this is the first char it will throw a series of exceptions which
-        are caught and cause appropriate values to be set for later.
+        Calculate the amount of smushing we can do between this char and the
+        last If this is the first char it will throw a series of exceptions
+        which are caught and cause appropriate values to be set for later.
 
         This differs from C figlet which will just get bogus values from
         memory and then discard them after.
         """
-        if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0: return 0
+        if (self.base.Font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0:
+            return 0
 
         maxSmush = self.curCharWidth
         for row in range(0, self.base.Font.height):
@@ -419,7 +438,8 @@ class FigletRenderingEngine(object):
 
             if ch1 == '' or ch1 == ' ':
                 amt += 1
-            elif ch2 != '' and self.smushChars(left=ch1, right=ch2) is not None:
+            elif (ch2 != ''
+                    and self.smushChars(left=ch1, right=ch2) is not None):
                 amt += 1
 
             if amt < maxSmush:
@@ -435,7 +455,8 @@ class FigletRenderingEngine(object):
         buffer = ['' for i in range(self.base.Font.height)]
 
         for c in map(ord, list(text)):
-            if not c in self.base.Font.chars: continue
+            if c not in self.base.Font.chars:
+                continue
             curChar = self.base.Font.chars[c]
             self.curCharWidth = self.base.Font.width[c]
             maxSmush = self.smushAmount(buffer=buffer, curChar=curChar)
@@ -470,16 +491,19 @@ class FigletRenderingEngine(object):
 
             self.prevCharWidth = self.curCharWidth
 
-
         # Justify text. This does not use str.rjust/str.center
         # specifically because the output would not match FIGlet
         if self.base.justify == 'right':
             for row in range(0, self.base.Font.height):
-                buffer[row] = (' ' * (self.base.width - len(buffer[row]) - 1)) + buffer[row]
+                buffer[row] = (
+                    ' ' * (self.base.width - len(buffer[row]) - 1)
+                ) + buffer[row]
 
         elif self.base.justify == 'center':
             for row in range(0, self.base.Font.height):
-                buffer[row] = (' ' * int((self.base.width - len(buffer[row])) / 2)) + buffer[row]
+                buffer[row] = (
+                    ' ' * int((self.base.width - len(buffer[row])) / 2)
+                ) + buffer[row]
 
         # return rendered ASCII with hardblanks replaced
         buffer = '\n'.join(buffer) + '\n'
@@ -544,19 +568,31 @@ class Figlet(object):
 
 
 def main():
-    parser = OptionParser(version=__version__, usage='%prog [options] [text..]')
+    parser = OptionParser(version=__version__,
+                          usage='%prog [options] [text..]')
     parser.add_option('-f', '--font', default=DEFAULT_FONT,
-            help='font to render with (default: %default)', metavar='FONT')
-    parser.add_option('-D', '--direction', type='choice', choices=('auto', 'left-to-right', 'right-to-left'),
-            default='auto', metavar='DIRECTION', help='set direction text will be formatted in (default: %default)')
-    parser.add_option('-j', '--justify', type='choice', choices=('auto', 'left', 'center', 'right'), default='auto',
-            metavar='SIDE', help='set justification, defaults to print direction')
+                      help='font to render with (default: %default)',
+                      metavar='FONT')
+    parser.add_option('-D', '--direction', type='choice',
+                      choices=('auto', 'left-to-right', 'right-to-left'),
+                      default='auto', metavar='DIRECTION',
+                      help='set direction text will be formatted in '
+                           '(default: %default)')
+    parser.add_option('-j', '--justify', type='choice',
+                      choices=('auto', 'left', 'center', 'right'),
+                      default='auto', metavar='SIDE',
+                      help='set justification, defaults to print direction')
     parser.add_option('-w', '--width', type='int', default=80, metavar='COLS',
-            help='set terminal width for wrapping/justification (default: %default)' )
-    parser.add_option('-r', '--reverse', action='store_true', default=False, help='shows mirror image of output text')
-    parser.add_option('-F', '--flip', action='store_true', default=False, help='flips rendered output text over')
-    parser.add_option('-l', '--list_fonts', action='store_true', default=False, help='show installed fonts list')
-    parser.add_option('-i', '--info_font', action='store_true', default=False, help='show font\'s information, use with -f FONT')
+                      help='set terminal width for wrapping/justification '
+                           '(default: %default)')
+    parser.add_option('-r', '--reverse', action='store_true', default=False,
+                      help='shows mirror image of output text')
+    parser.add_option('-F', '--flip', action='store_true', default=False,
+                      help='flips rendered output text over')
+    parser.add_option('-l', '--list_fonts', action='store_true', default=False,
+                      help='show installed fonts list')
+    parser.add_option('-i', '--info_font', action='store_true', default=False,
+                      help='show font\'s information, use with -f FONT')
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
@@ -579,8 +615,10 @@ def main():
     )
 
     r = f.renderText(text)
-    if opts.reverse is True: r = r.reverse()
-    if opts.flip is True: r = r.flip()
+    if opts.reverse:
+        r = r.reverse()
+    if opts.flip:
+        r = r.flip()
 
     if sys.version_info > (3,):
         # Set stdout to binary mode
@@ -588,6 +626,7 @@ def main():
 
     sys.stdout.write((r + '\n').encode('UTF-8'))
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
