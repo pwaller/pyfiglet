@@ -349,21 +349,25 @@ class FigletRenderingEngine(object):
             if left == right:
                 return left
 
+        smushes = ()
+
         if self.base.Font.smushMode & self.SM_LOWLINE:
-            if (left  == '_') and (right in r'|/\[]{}()<>'): return right
-            if (right == '_') and (left  in r'|/\[]{}()<>'): return left
+            smushes += (('_', r'|/\[]{}()<>'),)
 
         if self.base.Font.smushMode & self.SM_HIERARCHY:
-            if (left  == '|')   and (right in r'|/\[]{}()<>'): return right
-            if (right == '|')   and (left  in r'|/\[]{}()<>'): return left
-            if (left  in r'\/') and (right in '[]{}()<>'): return right
-            if (right in r'\/') and (left  in '[]{}()<>'): return left
-            if (left  in '[]')  and (right in '{}()<>'): return right
-            if (right in '[]')  and (left  in '{}()<>'): return left
-            if (left  in '{}')  and (right in '()<>'): return right
-            if (right in '{}')  and (left  in '()<>'): return left
-            if (left  in '()')  and (right in '<>'): return right
-            if (right in '()')  and (left  in '<>'): return left
+            smushes += (
+                ('|', r'|/\[]{}()<>'),
+                (r'\/', '[]{}()<>'),
+                ('[]', '{}()<>'),
+                ('{}', '()<>'),
+                ('()', '<>'),
+            )
+
+        for a, b in smushes:
+            if left in a and right in b:
+                return right
+            if right in a and left in b:
+                return left
 
         if self.base.Font.smushMode & self.SM_PAIR:
             for pair in [left+right, right+left]:
