@@ -535,8 +535,12 @@ def main():
     r = f.renderText(text)
     if opts.reverse is True: r = r.reverse()
     if opts.flip is True: r = r.flip()
-    print(r)
 
+    if sys.version_info > (3,):
+        # Set stdout to binary mode
+        sys.stdout = sys.stdout.detach()
+
+    sys.stdout.write((r + '\n').encode('UTF-8'))
     return 0
 
 if __name__ == '__main__':
