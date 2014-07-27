@@ -92,7 +92,7 @@ class FigletFont(object):
             fn = '%s.%s' % (font, extension)
             if pkg_resources.resource_exists('pyfiglet.fonts', fn):
                 data = pkg_resources.resource_string('pyfiglet.fonts', fn)
-                data = data.decode('ascii', 'replace')
+                data = data.decode('UTF-8', 'replace')
                 return data
         else:
             raise FontNotFound(font)
@@ -103,7 +103,7 @@ class FigletFont(object):
                 in pkg_resources.resource_listdir('pyfiglet', 'fonts')
                 if font.endswith(('.flf', '.tlf'))
                    and cls.reMagicNumber.search(pkg_resources.resource_stream(
-                        'pyfiglet.fonts', font).readline().decode('ascii', 'replace'))]
+                        'pyfiglet.fonts', font).readline().decode('UTF-8', 'replace'))]
 
     @classmethod
     def infoFont(cls, font, short=False):
@@ -217,7 +217,10 @@ class FigletFont(object):
         return '<FigletFont object: %s>' % self.font
 
 
-class FigletString(str):
+unicode_string = type(''.encode('ascii').decode('ascii'))
+
+
+class FigletString(unicode_string):
     """
     Rendered figlet font
     """
@@ -532,8 +535,12 @@ def main():
     r = f.renderText(text)
     if opts.reverse is True: r = r.reverse()
     if opts.flip is True: r = r.flip()
-    print(r)
 
+    if sys.version_info > (3,):
+        # Set stdout to binary mode
+        sys.stdout = sys.stdout.detach()
+
+    sys.stdout.write((r + '\n').encode('UTF-8'))
     return 0
 
 if __name__ == '__main__':

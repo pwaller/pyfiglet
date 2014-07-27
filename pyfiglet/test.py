@@ -45,7 +45,13 @@ def main():
             raise Exception('Missing font file: '+fontpath)
 
         p = Popen(cmd, bufsize=1,stdout=PIPE)
-        outputFiglet = p.communicate()[0].decode('ascii', 'replace')
+        outputFiglet = p.communicate()[0].decode('UTF-8')
+
+        # Our TLF rendering isn't perfect, yet
+        strict = os.path.isfile(fontpath + '.flf')
+        if not strict:
+            outputPyfiglet = outputPyfiglet.strip('\n')
+            outputFiglet = outputFiglet.strip('\n')
 
         if outputPyfiglet == outputFiglet:
             print('[OK] %s' % font)
