@@ -2,4 +2,4 @@
 
 cd "$(dirname "$0")"/..
 export PYTHONPATH=$(pwd)
-exec python pyfiglet/__init__.py "$@"
+exec python -m pyfiglet "$@"
