@@ -83,6 +83,13 @@ AUTHOR
 	http://www.figlet.org/.
 
 	The Python port was done by Christopher Jones <cjones@insub.org> (http://gruntle.org/).
+	It is currently maintained by Peter Waller (p@pwaller.net, github:pwaller)
+
+THANKS
+
+	github:stefanor for various bug fixes and improvements and the debian packaging.
+
+	Thanks to anyone who contributed an issue or code on github!
 
 LICENSE
 
