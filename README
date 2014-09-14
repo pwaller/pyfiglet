@@ -83,6 +83,13 @@ AUTHOR
 	http://www.figlet.org/.
 
 	The Python port was done by Christopher Jones <cjones@insub.org> (http://gruntle.org/).
+	It is currently maintained by Peter Waller (p@pwaller.net, github:pwaller)
+
+THANKS
+
+	github:stefanor for various bug fixes and improvements and the debian packaging.
+
+	Thanks to anyone who contributed an issue or code on github!
 
 LICENSE
 
@@ -103,3 +110,32 @@ LICENSE
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 	(see LICENSE for full details)
+
+CHANGELOG
+
+	2014-09-14 0.7.2
+
+		#35 Add this CHANGELOG
+		#36 Bug fix for #34 (broken --reverse and --flip)
+			(reported "character mapping must return integer, None or unicode")
+
+	2014-07-27 0.7.1
+
+		#29 Fix for UTF8 regression
+		#31 Add __main__ entry point
+		#32 Pep8 the code and minor refactoring
+		#33 Trove classifiers update
+
+	2014-06-02 0.7
+
+		#9 	Add --list_fonts and --info_font
+		#10 Add tools/pyfiglet_example for listing all fonts
+		#11 Fix the pyfiglet command (had bad python path)
+		#12 Pyflakes fixes
+		#13 Configure Travis Continuous Integration
+		#17 Documentation usage sample fix
+		#19 Enable pyfiglet to use extended ASCII chars
+		#20 Add two cyrillic fonts
+		#21 Python 3 support
+		#27 Code improvements
+		#28 Human readable font list (-l)
