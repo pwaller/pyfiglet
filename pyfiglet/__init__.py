@@ -314,17 +314,20 @@ class FigletRenderingEngine(object):
         builder = FigletBuilder(text,
                                 self.base.Font,
                                 self.base.direction,
-                                self.base.width)
+                                self.base.width,
+                                self.base.justify)
 
         while builder.isNotFinished():
-            builder.addCharToBuffer()
+            builder.addCharToProduct()
             builder.goToNextChar()
 
-        builder.flushLastBuffer()
-        builder.formatProduct(self.base.justify)
         return builder.returnProduct()
 
 class FigletProduct(object):
+    """
+    This class stores the internal build part of
+    the ascii output string
+    """
     def __init__(self):
         self.queue = list()
         self.buffer_string = ""
@@ -340,22 +343,25 @@ class FigletBuilder(object):
     """
     Represent the internals of the build process
     """
-    def __init__(self, text, font, direction, width):
+    def __init__(self, text, font, direction, width, justify):
 
-        self.width = width
-        self.iterator = 0
+        self.text = list(map(ord, list(text)))
         self.direction = direction
+        self.width = width
         self.font = font
-        self.text = map(ord, list(text))
+        self.justify = justify
+
+        self.iterator = 0
+        self.maxSmush = 0
+        self.newBlankRegistered = False
+
         self.curCharWidth = 0
         self.prevCharWidth = 0
         self.currentTotalWidth = 0
-        self.previousTotalWidth = 0
-        self.maxSmush = 0
-        self.previousSmush = 0
+
+        self.blankMarkers = list()
         self.product = FigletProduct()
         self.buffer = ['' for i in range(self.font.height)]
-        self.blank_markers = list()
 
         # constants.. lifted from figlet222
         self.SM_EQUAL = 1    # smush equal chars (not hardblanks)
@@ -367,8 +373,67 @@ class FigletBuilder(object):
         self.SM_KERN = 64
         self.SM_SMUSH = 128
 
-    def _getCharAt(self, i):
-        if i < 0 or i >= len(self.text):
+    # builder interface
+
+    def addCharToProduct(self):
+        curChar = self.getCurChar()
+        if curChar is None:
+            return
+        self.curCharWidth = self.getCurWidth()
+        self.maxSmush = self.currentSmushAmount(curChar)
+
+        self.currentTotalWidth = len(self.buffer[0]) + self.curCharWidth - self.maxSmush
+
+        if self.text[self.iterator] == ord(' '):
+            self.blankMarkers.append(([row for row in self.buffer], self.iterator))
+
+        #print(chr(self.text[self.iterator]),":",len(self.buffer[0]),"=>",self.currentTotalWidth,";;", self.blankMarkers)
+        #for i in self.buffer:
+        #    print(i)
+
+        if (self.currentTotalWidth >= self.width):
+            self.handleNewLine()
+        else:
+            for row in range(0, self.font.height):
+                self.addCurCharRowToBufferRow(curChar, row)
+
+
+        self.prevCharWidth = self.curCharWidth
+
+    def goToNextChar(self):
+        self.iterator += 1
+
+    def returnProduct(self):
+        """
+        Returns the output string created by formatProduct
+        """
+        if self.buffer[0] != '':
+            self.flushLastBuffer()
+        self.formatProduct()
+        return self.product.getString()
+
+    def isNotFinished(self):
+        ret = self.iterator < len(self.text)
+        return ret
+
+    # private
+
+    def flushLastBuffer(self):
+        self.product.append(self.buffer)
+
+    def formatProduct(self):
+        """
+        This create the output string representation from
+        the internal representation of the product
+        """
+        string_acc = ''
+        for buffer in self.product.queue:
+            buffer = self.justifyString(self.justify, buffer)
+            string_acc += self.replaceHardblanks(buffer)
+        self.product.buffer_string = string_acc
+
+    def getCharAt(self, i):
+        if i < 0 or i >= len(list(self.text)):
             return None
         c = self.text[i]
         if c not in self.font.chars:
@@ -376,7 +441,7 @@ class FigletBuilder(object):
         else:
             return self.font.chars[c]
 
-    def _getCharWidthAt(self, i):
+    def getCharWidthAt(self, i):
         if i < 0 or i >= len(self.text):
             return None
         c = self.text[i]
@@ -385,14 +450,11 @@ class FigletBuilder(object):
         else:
             return self.font.width[c]
 
-    def _getCurChar(self):
-        return self._getCharAt(self.iterator)
+    def getCurChar(self):
+        return self.getCharAt(self.iterator)
 
-    def _getCurWidth(self):
-        return self._getCharWidthAt(self.iterator)
-
-    def isNotFinished(self):
-        return self.iterator < len(self.text)
+    def getCurWidth(self):
+        return self.getCharWidthAt(self.iterator)
 
     def getLeftSmushedChar(self, i, addLeft):
         idx = len(addLeft) - self.maxSmush + i
@@ -401,6 +463,9 @@ class FigletBuilder(object):
         else:
             left = ''
         return left, idx
+
+    def currentSmushAmount(self, curChar):
+        return self.smushAmount(self.buffer, curChar)
 
     def updateSmushedCharInLeftBuffer(self, addLeft, idx, smushed):
         l = list(addLeft)
@@ -428,66 +493,42 @@ class FigletBuilder(object):
         addLeft, addRight = self.smushRow(curChar, row)
         self.buffer[row] = addLeft + addRight[self.maxSmush:]
 
-    def cutBufferAtLastBlank(self, last_blank):
-        cut_buffer = [row[:last_blank] for row in self.buffer]
-        self.product.append(cut_buffer)
-        self.buffer = [self.buffer[row][last_blank + self.font.width[ord(' ')] -1:] for row in range(self.font.height)]
+    def cutBufferCommon(self):
         self.currentTotalWidth = len(self.buffer[0])
-        self.blank_markers = list()
+        self.buffer = ['' for i in range(self.font.height)]
+        self.blankMarkers = list()
+        self.prevCharWidth = 0
+        curChar = self.getCurChar()
+        if curChar is None:
+            return
+        self.maxSmush = self.currentSmushAmount(curChar)
 
+    def cutBufferAtLastBlank(self, saved_buffer, saved_iterator):
+        self.product.append(saved_buffer)
+        self.iterator = saved_iterator
+        self.cutBufferCommon()
 
     def cutBufferAtLastChar(self):
-        raise NotImplementedError()
-
+        self.product.append(self.buffer)
+        self.iterator -= 1
+        self.cutBufferCommon()
 
     def blankExist(self, last_blank):
         return last_blank != -1
 
     def getLastBlank(self):
         try:
-            last_blank = self.blank_markers.pop()
+            saved_buffer, saved_iterator = self.blankMarkers.pop()
         except IndexError:
-            return -1
-        return last_blank
+            return -1,-1
+        return (saved_buffer, saved_iterator)
 
     def handleNewLine(self):
-        last_blank = self.getLastBlank()
-        if self.blankExist(last_blank):
-            self.cutBufferAtLastBlank(last_blank)
+        saved_buffer, saved_iterator = self.getLastBlank()
+        if self.blankExist(saved_iterator):
+            self.cutBufferAtLastBlank(saved_buffer, saved_iterator)
         else:
             self.cutBufferAtLastChar()
-
-    def addCharToBuffer(self):
-        curChar = self._getCurChar()
-        if curChar is None:
-            return
-        self.curCharWidth = self._getCurWidth()
-        self.previousSmush = self.maxSmush
-        self.previousWidth = self.currentTotalWidth
-        self.maxSmush = self.currentSmushAmount(curChar)
-        self.currentTotalWidth += self.curCharWidth - self.maxSmush
-
-        if (self.currentTotalWidth > self.width):
-            self.handleNewLine()
-
-        if self.text[self.iterator] == ord(' '):
-            self.blank_markers.append(len(self.buffer[0]))
-
-
-        for row in range(0, self.font.height):
-            self.addCurCharRowToBufferRow(curChar, row)
-
-        self.prevCharWidth = self.curCharWidth
-
-    def flushLastBuffer(self):
-        self.product.append(self.buffer)
-
-    def formatProduct(self, justify):
-        string_acc = ''
-        for buffer in self.product.queue:
-            buffer = self.justifyString(justify, buffer)
-            string_acc += self.replaceHardblanks(buffer)
-        self.product.buffer_string = string_acc
 
     def justifyString(self, justify, buffer):
         if justify == 'right':
@@ -506,15 +547,6 @@ class FigletBuilder(object):
         string = '\n'.join(buffer) + '\n'
         string = string.replace(self.font.hardBlank, ' ')
         return string
-
-    def returnProduct(self):
-        return self.product.getString()
-
-    def goToNextChar(self):
-        self.iterator += 1
-
-    def currentSmushAmount(self, curChar):
-        return self.smushAmount(self.buffer, curChar)
 
     def smushAmount(self, buffer=[], curChar=[]):
         """
