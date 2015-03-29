@@ -425,17 +425,25 @@ class FigletBuilder(object):
         addLeft, addRight = self.smushRow(curChar, row)
         self.buffer[row] = addLeft + addRight[self.maxSmush:]
 
-    def handleNewLine(self):
+    def cutBufferAtLastBlank(self, last_blank):
+        cut_buffer = [row[:last_blank] for row in self.buffer]
+        self.product.append(cut_buffer)
+        self.buffer = [self.buffer[row][last_blank+1:] for row in range(self.font.height)]
+        self.currentTotalWidth = len(self.buffer[0])
+
+    def blankExist(self, last_blank):
+        return last_blank != -1
+
+    def getLastBlank(self):
         last_blank = self.buffer[0].rfind(self.font.hardBlank)
         while last_blank > self.width:
             last_blank = self.buffer[0].rfind(self.font.hardBlank, 0, last_blank)
+        return last_blank
 
-        if last_blank != -1:
-            cut_buffer = [row[:last_blank] for row in self.buffer]
-            self.product.append(cut_buffer)
-            self.buffer = [self.buffer[row][last_blank+1:] for row in range(self.font.height)]
-            self.currentTotalWidth = len(self.buffer[0])
-
+    def handleNewLine(self):
+        last_blank = self.getLastBlank()
+        if self.blankExist(last_blank):
+            self.cutBufferAtLastBlank(last_blank)
         else:
             raise NotImplementedError()
 
