@@ -350,9 +350,12 @@ class FigletBuilder(object):
         self.curCharWidth = 0
         self.prevCharWidth = 0
         self.currentTotalWidth = 0
+        self.previousTotalWidth = 0
         self.maxSmush = 0
+        self.previousSmush = 0
         self.product = FigletProduct()
         self.buffer = ['' for i in range(self.font.height)]
+        self.blank_markers = list()
 
         # constants.. lifted from figlet222
         self.SM_EQUAL = 1    # smush equal chars (not hardblanks)
@@ -428,16 +431,23 @@ class FigletBuilder(object):
     def cutBufferAtLastBlank(self, last_blank):
         cut_buffer = [row[:last_blank] for row in self.buffer]
         self.product.append(cut_buffer)
-        self.buffer = [self.buffer[row][last_blank+1:] for row in range(self.font.height)]
+        self.buffer = [self.buffer[row][last_blank + self.font.width[ord(' ')] -1:] for row in range(self.font.height)]
         self.currentTotalWidth = len(self.buffer[0])
+        self.blank_markers = list()
+
+
+    def cutBufferAtLastChar(self):
+        raise NotImplementedError()
+
 
     def blankExist(self, last_blank):
         return last_blank != -1
 
     def getLastBlank(self):
-        last_blank = self.buffer[0].rfind(self.font.hardBlank)
-        while last_blank > self.width:
-            last_blank = self.buffer[0].rfind(self.font.hardBlank, 0, last_blank)
+        try:
+            last_blank = self.blank_markers.pop()
+        except IndexError:
+            return -1
         return last_blank
 
     def handleNewLine(self):
@@ -445,18 +455,24 @@ class FigletBuilder(object):
         if self.blankExist(last_blank):
             self.cutBufferAtLastBlank(last_blank)
         else:
-            raise NotImplementedError()
+            self.cutBufferAtLastChar()
 
     def addCharToBuffer(self):
         curChar = self._getCurChar()
         if curChar is None:
             return
         self.curCharWidth = self._getCurWidth()
+        self.previousSmush = self.maxSmush
+        self.previousWidth = self.currentTotalWidth
         self.maxSmush = self.currentSmushAmount(curChar)
         self.currentTotalWidth += self.curCharWidth - self.maxSmush
 
         if (self.currentTotalWidth > self.width):
             self.handleNewLine()
+
+        if self.text[self.iterator] == ord(' '):
+            self.blank_markers.append(len(self.buffer[0]))
+
 
         for row in range(0, self.font.height):
             self.addCurCharRowToBufferRow(curChar, row)
