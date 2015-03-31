@@ -5,7 +5,10 @@ import os.path
 import sys
 from optparse import OptionParser
 from pyfiglet import Figlet
-from subprocess import Popen, PIPE
+if sys.version_info >= (3, 0):
+    from subprocess import Popen, PIPE
+else:
+    from subprocess32 import Popen, PIPE
 
 __version__ = '0.1'
 
@@ -20,7 +23,7 @@ class Test(object):
         self.ok = 0
         self.fail = 0
         self.failed = []
-        self.skip = ['runic']  # known bug..
+        self.skip = ['runic','pyramid']  # known bug..
         self.f = Figlet()
 
     def outputUsingFigletorToilet(self, text, font, fontpath):
@@ -31,8 +34,9 @@ class Test(object):
         else:
             raise Exception('Missing font file: '+fontpath)
 
-        p = Popen(cmd, bufsize=1, stdout=PIPE)
-        outputFiglet = p.communicate()[0].decode('UTF-8')
+        print(font)
+        p = Popen(cmd, bufsize=4096, stdout=PIPE)
+        outputFiglet = p.communicate()[0].decode('utf8')
         return outputFiglet
 
     def validate_font_output(self, font, outputFiglet, outputPyfiglet):
@@ -84,9 +88,8 @@ class Test(object):
 
         return -len(self.failed)
 
-
-
-
+def banner(text):
+    print(Figlet().renderText(text))
 
 def main():
     parser = OptionParser(version=__version__)
@@ -97,8 +100,12 @@ def main():
 
     opts, args = parser.parse_args()
     test = Test(opts)
+    banner("TESTING one word")
     test.check_text("foo")
-    test.check_text("bar")
+    banner("TESTING cut at space")
+    test.check_text("This is a very long text with many spaces and little words")
+    banner("TESTING cut at last char")
+    test.check_text("Averylongwordthatwillbecutatsomepoint I hope")
     return test.check_result()
 
 
