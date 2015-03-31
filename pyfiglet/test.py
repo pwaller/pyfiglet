@@ -14,6 +14,79 @@ def dump(text):
     for line in text.split('\n'):
         print(repr(line))
 
+class Test(object):
+    def __init__(self, opts):
+        self.opts = opts
+        self.ok = 0
+        self.fail = 0
+        self.failed = []
+        self.skip = ['runic']  # known bug..
+        self.f = Figlet()
+
+    def outputUsingFigletorToilet(self, text, font, fontpath):
+        if os.path.isfile(fontpath + '.flf'):
+            cmd = ('figlet', '-d', 'pyfiglet/fonts', '-f', font, text)
+        elif os.path.isfile(fontpath + '.tlf'):
+            cmd = ('toilet', '-d', 'pyfiglet/fonts', '-f', font, text)
+        else:
+            raise Exception('Missing font file: '+fontpath)
+
+        p = Popen(cmd, bufsize=1, stdout=PIPE)
+        outputFiglet = p.communicate()[0].decode('UTF-8')
+        return outputFiglet
+
+    def validate_font_output(self, font, outputFiglet, outputPyfiglet):
+        if outputPyfiglet == outputFiglet:
+            print('[OK] %s' % font)
+            self.ok += 1
+            return
+
+        print('[FAIL] %s' % font)
+        self.fail += 1
+        self.failed.append(font)
+        self.show_result(outputFiglet, outputPyfiglet)
+
+    def show_result(self, outputFiglet, outputPyfiglet):
+        if self.opts.show is True:
+            print('[PYTHON] *** %s\n\n' % font)
+            dump(outputPyfiglet)
+            print('[FIGLET] *** %s\n\n' % font)
+            dump(outputFiglet)
+            raw_input()
+
+    def check_font(self, text, font):
+        if font in self.skip:
+            return
+        fontpath = os.path.join('pyfiglet', 'fonts', font)
+
+        self.f.setFont(font=font)
+
+        outputPyfiglet = self.f.renderText(text)
+        outputFiglet = self.outputUsingFigletorToilet(text, font, fontpath)
+
+        # Our TLF rendering isn't perfect, yet
+        strict = os.path.isfile(fontpath + '.flf')
+        if not strict:
+            outputPyfiglet = outputPyfiglet.strip('\n')
+            outputFiglet = outputFiglet.strip('\n')
+
+        self.validate_font_output(font, outputFiglet, outputPyfiglet)
+
+
+    def check_text(self, text):
+        for font in self.f.getFonts():
+            self.check_font(text, font)
+
+    def check_result(self):
+        print('OK = %d, FAIL = %d' % (self.ok, self.fail))
+        if len(self.failed) > 0:
+            print('FAILED = %s' % repr(self.failed))
+
+        return -len(self.failed)
+
+
+
+
 
 def main():
     parser = OptionParser(version=__version__)
@@ -23,60 +96,10 @@ def main():
                            '(default: %default)')
 
     opts, args = parser.parse_args()
-
-    f = Figlet()
-
-    ok = 0
-    fail = 0
-    failed = []
-    skip = ['runic']  # known bug..
-
-    for font in f.getFonts():
-        if font in skip:
-            continue
-
-        f.setFont(font=font)
-
-        outputPyfiglet = f.renderText('foo')
-
-        fontpath = os.path.join('pyfiglet', 'fonts', font)
-        if os.path.isfile(fontpath + '.flf'):
-            cmd = ('figlet', '-d', 'pyfiglet/fonts', '-f', font, 'foo')
-        elif os.path.isfile(fontpath + '.tlf'):
-            cmd = ('toilet', '-d', 'pyfiglet/fonts', '-f', font, 'foo')
-        else:
-            raise Exception('Missing font file: '+fontpath)
-
-        p = Popen(cmd, bufsize=1, stdout=PIPE)
-        outputFiglet = p.communicate()[0].decode('UTF-8')
-
-        # Our TLF rendering isn't perfect, yet
-        strict = os.path.isfile(fontpath + '.flf')
-        if not strict:
-            outputPyfiglet = outputPyfiglet.strip('\n')
-            outputFiglet = outputFiglet.strip('\n')
-
-        if outputPyfiglet == outputFiglet:
-            print('[OK] %s' % font)
-            ok += 1
-            continue
-
-        print('[FAIL] %s' % font)
-        fail += 1
-        failed.append(font)
-
-        if opts.show is True:
-            print('[PYTHON] *** %s\n\n' % font)
-            dump(outputPyfiglet)
-            print('[FIGLET] *** %s\n\n' % font)
-            dump(outputFiglet)
-            raw_input()
-
-    print('OK = %d, FAIL = %d' % (ok, fail))
-    if len(failed) > 0:
-        print('FAILED = %s' % repr(failed))
-
-    return 0
+    test = Test(opts)
+    test.check_text("foo")
+    test.check_text("bar")
+    return test.check_result()
 
 
 if __name__ == '__main__':
