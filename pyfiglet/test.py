@@ -5,13 +5,22 @@ import os.path
 import sys
 from optparse import OptionParser
 from pyfiglet import Figlet
-if sys.version_info >= (3, 0):
-    from subprocess import Popen, PIPE
-else:
-    from subprocess32 import Popen, PIPE
+from subprocess import Popen, PIPE
+try:
+    from colorama import init
+    init(strip=not sys.stdout.isatty())
+    from termcolor import cprint
+except:
+    def cprint(text, color):
+        print(text)
 
 __version__ = '0.1'
 
+def fail(text):
+    cprint(text, 'red')
+
+def win(text):
+    cprint(text, 'green')
 
 def dump(text):
     for line in text.split('\n'):
@@ -34,18 +43,17 @@ class Test(object):
         else:
             raise Exception('Missing font file: '+fontpath)
 
-        print(font)
         p = Popen(cmd, bufsize=4096, stdout=PIPE)
         outputFiglet = p.communicate()[0].decode('utf8')
         return outputFiglet
 
     def validate_font_output(self, font, outputFiglet, outputPyfiglet):
         if outputPyfiglet == outputFiglet:
-            print('[OK] %s' % font)
+            win('[OK] %s' % font)
             self.ok += 1
             return
 
-        print('[FAIL] %s' % font)
+        fail('[FAIL] %s' % font)
         self.fail += 1
         self.failed.append(font)
         self.show_result(outputFiglet, outputPyfiglet)
@@ -89,7 +97,7 @@ class Test(object):
         return -len(self.failed)
 
 def banner(text):
-    print(Figlet().renderText(text))
+    cprint(Figlet().renderText(text), "blue")
 
 def main():
     parser = OptionParser(version=__version__)
