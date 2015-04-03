@@ -32,7 +32,8 @@ class Test(object):
         self.ok = 0
         self.fail = 0
         self.failed = []
-        self.skip = ['runic','pyramid']  # known bug..
+        self.oked = []
+        self.skip = ['runic','pyramid','eftifont']  # known bug..
         self.f = Figlet()
 
     def outputUsingFigletorToilet(self, text, font, fontpath):
@@ -51,6 +52,7 @@ class Test(object):
         if outputPyfiglet == outputFiglet:
             win('[OK] %s' % font)
             self.ok += 1
+            self.oked.append(font)
             return
 
         fail('[FAIL] %s' % font)
@@ -94,7 +96,7 @@ class Test(object):
         if len(self.failed) > 0:
             print('FAILED = %s' % repr(self.failed))
 
-        return -len(self.failed)
+        return self.failed, self.oked
 
 def banner(text):
     cprint(Figlet().renderText(text), "blue")
@@ -114,7 +116,10 @@ def main():
     test.check_text("This is a very long text with many spaces and little words")
     banner("TESTING cut at last char")
     test.check_text("Averylongwordthatwillbecutatsomepoint I hope")
-    return test.check_result()
+    if len(test.check_result()[0]) == 0:
+        return 0
+    else:
+        return 1
 
 
 if __name__ == '__main__':
