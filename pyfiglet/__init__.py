@@ -55,6 +55,10 @@ class FigletError(Exception):
     def __str__(self):
         return self.error
 
+class CharNotPrinted(FigletError):
+    """
+    Raised when the width is not sufficient to print a character
+    """
 
 class FontNotFound(FigletError):
     """
@@ -379,6 +383,8 @@ class FigletBuilder(object):
         curChar = self.getCurChar()
         if curChar is None:
             return
+        if self.width < self.getCurWidth():
+            raise CharNotPrinted("Width is not enough to print this character")
         self.curCharWidth = self.getCurWidth()
         self.maxSmush = self.currentSmushAmount(curChar)
 
@@ -386,10 +392,6 @@ class FigletBuilder(object):
 
         if self.text[self.iterator] == ord(' '):
             self.blankMarkers.append(([row for row in self.buffer], self.iterator))
-
-        #print(chr(self.text[self.iterator]),":",len(self.buffer[0]),"=>",self.currentTotalWidth,";;", self.blankMarkers)
-        #for i in self.buffer:
-        #    print(i)
 
         if (self.currentTotalWidth >= self.width):
             self.handleNewLine()
