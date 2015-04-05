@@ -778,6 +778,8 @@ def main():
         parser.print_help()
         return 1
 
+    args = map(lambda arg: arg.decode(sys.stdout.encoding), args)
+
     text = ' '.join(args)
 
     f = Figlet(
