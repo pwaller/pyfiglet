@@ -100,6 +100,10 @@ LICENSE
 
 CHANGELOG
 
+	2015-04-14 0.7.3
+
+	    #41 add newline and text wrapping support
+
 	2014-09-14 0.7.2
 
 		#35 Add this CHANGELOG
