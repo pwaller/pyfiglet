@@ -60,19 +60,6 @@ USAGE
 	print f.renderText('text to render')
 
 
-	pyfiglet also supports reading fonts from a zip archive. pyfiglet
-	comes with a file called fonts.zip which includes all of the default
-	fonts FIGlet comes with as well as the standard collection of user-
-	contributed fonts. By default, pyfiglet uses this for fonts. Specifying
-	a directory (on the commandline or in the Figlet() object) will override
-	this behavior. You may also specify a zipfile to use with -z or zipfile=PATH
-	in the Figlet() constructor.
-
-	If you wish to add/remove fonts or create your own font package, be aware
-	that there *must* be a folder in the root of the zipfile called "fonts". You
-	can examine the bunlded fonts.zip to see how it should be packaged.
-
-
 AUTHOR
 
 	pyfiglet is a *port* of FIGlet, and much of the code is directly translated
