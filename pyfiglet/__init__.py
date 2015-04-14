@@ -381,6 +381,13 @@ class FigletBuilder(object):
 
     def addCharToProduct(self):
         curChar = self.getCurChar()
+
+        # if the character is a newline, we flush the buffer
+        if self.text[self.iterator] == ord("\n"):
+                self.blankMarkers.append(([row for row in self.buffer], self.iterator))
+                self.handleNewLine()
+                return None
+
         if curChar is None:
             return
         if self.width < self.getCurWidth():
@@ -392,6 +399,10 @@ class FigletBuilder(object):
 
         if self.text[self.iterator] == ord(' '):
             self.blankMarkers.append(([row for row in self.buffer], self.iterator))
+
+        if self.text[self.iterator] == ord('\n'):
+            self.blankMarkers.append(([row for row in self.buffer], self.iterator))
+            self.handleNewLine()
 
         if (self.currentTotalWidth >= self.width):
             self.handleNewLine()
@@ -438,6 +449,7 @@ class FigletBuilder(object):
         if i < 0 or i >= len(list(self.text)):
             return None
         c = self.text[i]
+
         if c not in self.font.chars:
             return None
         else:

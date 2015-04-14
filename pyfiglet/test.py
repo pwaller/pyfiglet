@@ -58,9 +58,9 @@ class Test(object):
         fail('[FAIL] %s' % font)
         self.fail += 1
         self.failed.append(font)
-        self.show_result(outputFiglet, outputPyfiglet)
+        self.show_result(outputFiglet, outputPyfiglet, font)
 
-    def show_result(self, outputFiglet, outputPyfiglet):
+    def show_result(self, outputFiglet, outputPyfiglet, font):
         if self.opts.show is True:
             print('[PYTHON] *** %s\n\n' % font)
             dump(outputPyfiglet)
@@ -116,6 +116,8 @@ def main():
     test.check_text("This is a very long text with many spaces and little words")
     banner("TESTING cut at last char")
     test.check_text("Averylongwordthatwillbecutatsomepoint I hope")
+    banner("TESTING explicit new line")
+    test.check_text("this text\nuse new line")
     if len(test.check_result()[0]) == 0:
         return 0
     else:
