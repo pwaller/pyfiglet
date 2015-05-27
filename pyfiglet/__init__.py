@@ -110,6 +110,7 @@ class FigletFont(object):
             return False
         f = pkg_resources.resource_stream('pyfiglet.fonts', font)
         header = f.readline().decode('UTF-8', 'replace')
+        f.close()
         return cls.reMagicNumber.search(header)
 
     @classmethod
