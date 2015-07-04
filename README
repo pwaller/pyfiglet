@@ -72,6 +72,8 @@ AUTHOR
 	The Python port was done by Christopher Jones <cjones@insub.org> (http://gruntle.org/).
 	It is currently maintained by Peter Waller (p@pwaller.net, github:pwaller)
 
+	The toilet fonts (.tlf) were imported from toilet 0.3-1, by Sam Hocevar <sam@zoy.org>.
+
 THANKS
 
 	github:stefanor for various bug fixes and improvements and the debian packaging.
