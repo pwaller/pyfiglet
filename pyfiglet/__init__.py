@@ -792,7 +792,7 @@ def main():
         return 1
 
     if sys.version_info < (3,):
-        args = map(lambda arg: arg.decode(sys.stdout.encoding), args)
+        args = [arg.decode('UTF-8') for arg in args]
 
     text = ' '.join(args)
 
