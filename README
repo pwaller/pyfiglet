@@ -130,7 +130,7 @@ CHANGELOG
 
         2014-06-02 0.7
 
-            #9         Add --list_fonts and --info_font
+            #9  Add --list_fonts and --info_font
             #10 Add tools/pyfiglet_example for listing all fonts
             #11 Fix the pyfiglet command (had bad python path)
             #12 Pyflakes fixes
