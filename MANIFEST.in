@@ -1,2 +1,3 @@
 include pyfiglet/fonts/*.flf
+include pyfiglet/fonts/*.flc
 recursive-include doc *

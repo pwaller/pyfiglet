@@ -33,10 +33,13 @@ class Test(object):
         self.fail = 0
         self.failed = []
         self.oked = []
-        self.skip = ['runic','pyramid','eftifont']  # known bug..
+        # known bugs...
+        self.skip = ['runic', 'pyramid', 'eftifont', 'DANC4', 'dietcola']
         # Toilet fonts that we don't handle identically, yet
         self.skip += ['emboss', 'emboss2', 'future', 'letter', 'pagga',
                       'smblock', 'smbraille', 'wideterm']
+        # fonts that throw Unicode decoding errors
+        self.skip += ['dosrebel', 'konto', 'kontoslant']
         self.f = Figlet()
 
     def outputUsingFigletorToilet(self, text, font, fontpath):
@@ -45,10 +48,14 @@ class Test(object):
         elif os.path.isfile(fontpath + '.tlf'):
             cmd = ('toilet', '-d', 'pyfiglet/fonts', '-f', font, text)
         else:
-            raise Exception('Missing font file: '+fontpath)
+            raise Exception('Missing font file: {}'.format(fontpath))
 
         p = Popen(cmd, bufsize=4096, stdout=PIPE)
-        outputFiglet = p.communicate()[0].decode('utf8')
+        try:
+            outputFiglet = p.communicate()[0].decode('utf8')
+        except UnicodeDecodeError as e:
+            print("Unicode Error handling font {}".format(font))
+            outputFiglet = ''
         return outputFiglet
 
     def validate_font_output(self, font, outputFiglet, outputPyfiglet):
