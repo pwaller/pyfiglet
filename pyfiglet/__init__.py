@@ -7,6 +7,7 @@ Python FIGlet adaption
 
 from __future__ import print_function, unicode_literals
 
+import os
 import pkg_resources
 import re
 import sys
@@ -101,6 +102,9 @@ class FigletFont(object):
                 data = pkg_resources.resource_string('pyfiglet.fonts', fn)
                 data = data.decode('UTF-8', 'replace')
                 return data
+            elif os.path.isfile(font):
+                with open(font, 'rb') as f:
+                    return f.read().decode('UTF-8', 'replace')
         else:
             raise FontNotFound(font)
 
@@ -108,6 +112,8 @@ class FigletFont(object):
     def isValidFont(cls, font):
         if not font.endswith(('.flf', '.tlf')):
             return False
+        if os.path.isfile(font):
+            return True
         f = pkg_resources.resource_stream('pyfiglet.fonts', font)
         header = f.readline().decode('UTF-8', 'replace')
         f.close()
