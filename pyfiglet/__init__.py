@@ -112,9 +112,11 @@ class FigletFont(object):
     def isValidFont(cls, font):
         if not font.endswith(('.flf', '.tlf')):
             return False
+        f = None
         if os.path.isfile(font):
-            return True
-        f = pkg_resources.resource_stream('pyfiglet.fonts', font)
+            f = open(font)
+        else:
+            f = pkg_resources.resource_stream('pyfiglet.fonts', font)
         header = f.readline().decode('UTF-8', 'replace')
         f.close()
         return cls.reMagicNumber.search(header)
