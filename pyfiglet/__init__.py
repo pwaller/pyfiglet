@@ -114,7 +114,7 @@ class FigletFont(object):
             return False
         f = None
         if os.path.isfile(font):
-            f = open(font)
+            f = open(font, 'rb')
         else:
             f = pkg_resources.resource_stream('pyfiglet.fonts', font)
         header = f.readline().decode('UTF-8', 'replace')
