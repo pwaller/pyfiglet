@@ -15,10 +15,10 @@ from optparse import OptionParser
 
 from .version import __version__
 
-__author__ = 'Peter Waller <peter.waller@gmail.com>'
+__author__ = 'Peter Waller <p@pwaller.net>'
 __copyright__ = """
 Copyright (C) 2007 Christopher Jones <cjones@gruntle.org>
-Tweaks (C) 2011 Peter Waller <peter.waller@gmail.com>
+Tweaks (C) 2011 Peter Waller <p@pwaller.net>
        (C) 2011 Stefano Rivera <stefano@rivera.za.net>
 
 This program is free software; you can redistribute it and/or

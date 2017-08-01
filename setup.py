@@ -45,7 +45,7 @@ setup(
         'Topic :: Text Processing :: Fonts',
     ],
     author='Peter Waller (Thanks to Christopher Jones and Stefano Rivera)',
-    author_email='peter.waller@gmail.com',
+    author_email='p@pwaller.net',
     url='https://github.com/pwaller/pyfiglet',
     packages=['pyfiglet', 'pyfiglet.fonts'],
     package_data={'pyfiglet.fonts': ['*.flf', '*.flc']},
