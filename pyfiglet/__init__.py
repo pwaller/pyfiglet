@@ -808,14 +808,20 @@ def main():
                       help='show installed fonts list')
     parser.add_option('-i', '--info_font', action='store_true', default=False,
                       help='show font\'s information, use with -f FONT')
-    parser.add_option('-c', '--foreground_color', default='DEFAULT',
+    parser.add_option('-c', '--foreground_color', default='DEFAULT', choices=list(COLORS.keys()),
                       help='prints text with passed foreground color')
-    parser.add_option('-b', '--background_color', default='DEFAULT',
+    parser.add_option('-b', '--background_color', default='DEFAULT', choices=list(COLORS.keys()),
                       help='prints text with passed background color')
+    parser.add_option('-L', '--list_color', action='store_true', default=False,
+                      help='show colors list')
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
         print('\n'.join(sorted(FigletFont.getFonts())))
+        exit(0)
+
+    if opts.list_color:
+        print('\n'.join(sorted(COLORS.keys())))
         exit(0)
 
     if opts.info_font:
