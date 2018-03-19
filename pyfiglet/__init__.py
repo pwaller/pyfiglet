@@ -39,9 +39,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 DEFAULT_FONT = 'standard'
 
-COLORS = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'MAGENT': 35, 'CYAN': 36, 'LIGHT_GRAY': 37,
+COLORS = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'MAGENTA': 35, 'CYAN': 36, 'LIGHT_GRAY': 37,
           'DEFAULT': 39, 'DARK_GRAY': 90, 'LIGHT_RED': 91, 'LIGHT_GREEN': 92, 'LIGHT_YELLOW': 93, 'LIGHT_BLUE': 94,
-          'LIGHT_MAGENTA': 95, 'LIGHT_CYAN': 96, 'WHITE': 97
+          'LIGHT_MAGENTA': 95, 'LIGHT_CYAN': 96, 'WHITE': 97, 'RESET': 0
 }
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
@@ -50,11 +50,11 @@ def figlet_format(text, font=DEFAULT_FONT, **kwargs):
 
 
 def print_figlet(text, font=DEFAULT_FONT, foreground=None, background=None, **kwargs):
-    foreground_color = __get_ascii_color(foreground, isBackground=False)
-    background_color = __get_ascii_color(background, isBackground=True)
+    foreground_color = __color_to_ansi(foreground, isBackground=False)
+    background_color = __color_to_ansi(background, isBackground=True)
     colors_string = foreground_color + background_color    
-    default_colors = __get_ascii_color('DEFAULT', True) + __get_ascii_color('DEFAULT', False)
-    print(colors_string + figlet_format(text, font, **kwargs) + default_colors)
+    reset_colors = '' if colors_string == '' else  __color_to_ansi('RESET', False)
+    print(colors_string + figlet_format(text, font, **kwargs) + reset_colors)
 
 
 class FigletError(Exception):
@@ -767,18 +767,25 @@ class Figlet(object):
         return self.Font.getFonts()
 
 
-def __get_ascii_color(color, isBackground):
+def __color_to_ansi(color, isBackground):
     if not color:
         return ''
-    if color not in COLORS:
-        raise NotValidColorException('Color \'' + color + '\' is not a valid color, only ASCII colors...')
-    ascii_code = COLORS[color]
-    if isBackground:
-        ascii_code += 10
-    return '\033[' + str(ascii_code) + 'm'
+    if color.count(';') > 0 and color.count(';') != 2:
+        raise InvalidColor('Specified color \'{}\' not a valid color follow R;G;B format')
+    elif color.count(';') == 0 and color not in COLORS:
+        raise InvalidColor('Specified color \'{}\' not found in ANSI COLORS list'.format(color))
+    # validate entry
+    try:
+        ascii_code = COLORS[color]
+        if isBackground:
+            ascii_code += 10
+    except KeyError:
+        ascii_code = 48 if isBackground else 38
+        ascii_code = '{};2;{}'.format(ascii_code, color)
+    return '\033[{}m'.format(str(ascii_code))
 
 
-class NotValidColorException(Exception):
+class InvalidColor(Exception):
     pass
 
 
@@ -808,20 +815,21 @@ def main():
                       help='show installed fonts list')
     parser.add_option('-i', '--info_font', action='store_true', default=False,
                       help='show font\'s information, use with -f FONT')
-    parser.add_option('-c', '--foreground_color', default='DEFAULT', choices=list(COLORS.keys()),
-                      help='prints text with passed foreground color')
-    parser.add_option('-b', '--background_color', default='DEFAULT', choices=list(COLORS.keys()),
-                      help='prints text with passed background color')
-    parser.add_option('-L', '--list_color', action='store_true', default=False,
-                      help='show colors list')
+    parser.add_option('-c', '--color', default=':',
+                      help='''prints text with passed foreground color,
+                            --color=foreground:background
+                            --color=:background\t\t\t # only background
+                            --color=foreground | foreground:\t # only foreground
+                            --color=list\t\t\t # list all colors
+                            COLOR = list[COLOR] | [0-255];[0-255];[0-255] (RGB)''')
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
         print('\n'.join(sorted(FigletFont.getFonts())))
         exit(0)
 
-    if opts.list_color:
-        print('\n'.join(sorted(COLORS.keys())))
+    if opts.color == 'list':
+        print('[0-255];[0-255];[0-255] (RGB)\n' + '\n'.join((sorted(COLORS.keys()))))
         exit(0)
 
     if opts.info_font:
@@ -852,11 +860,13 @@ def main():
         # Set stdout to binary mode
         sys.stdout = sys.stdout.detach()
 
-    foreground_color = __get_ascii_color(opts.foreground_color, isBackground=False)
-    background_color = __get_ascii_color(opts.background_color, isBackground=True)
-    colors_string = foreground_color + background_color    
-    default_colors = __get_ascii_color('DEFAULT', True) + __get_ascii_color('DEFAULT', False)
-    sys.stdout.write((colors_string + (r + '\n') + default_colors).encode('UTF-8'))
+    if ':' not in opts.color:
+        opts.color += ':'
+    foreground_color = __color_to_ansi(opts.color.split(':', 1)[0], isBackground=False)
+    background_color = __color_to_ansi(opts.color.split(':', 1)[1], isBackground=True)
+    colors_string = foreground_color + background_color
+    reset_colors = '' if colors_string == '' else  __color_to_ansi('RESET', False)
+    sys.stdout.write((colors_string + (r + '\n') + reset_colors).encode('UTF-8'))
     return 0
 
 
