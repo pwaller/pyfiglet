@@ -39,9 +39,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 DEFAULT_FONT = 'standard'
 
-COLORS = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'MAGENTA': 35, 'CYAN': 36, 'LIGHT_GRAY': 37,
-          'DEFAULT': 39, 'DARK_GRAY': 90, 'LIGHT_RED': 91, 'LIGHT_GREEN': 92, 'LIGHT_YELLOW': 93, 'LIGHT_BLUE': 94,
-          'LIGHT_MAGENTA': 95, 'LIGHT_CYAN': 96, 'WHITE': 97, 'RESET': 0
+COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'MAGENTA': 35, 'CYAN': 36, 'LIGHT_GRAY': 37,
+               'DEFAULT': 39, 'DARK_GRAY': 90, 'LIGHT_RED': 91, 'LIGHT_GREEN': 92, 'LIGHT_YELLOW': 93, 'LIGHT_BLUE': 94,
+               'LIGHT_MAGENTA': 95, 'LIGHT_CYAN': 96, 'WHITE': 97, 'RESET': 0
 }
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
@@ -772,11 +772,11 @@ def __color_to_ansi(color, isBackground):
         return ''
     if color.count(';') > 0 and color.count(';') != 2:
         raise InvalidColor('Specified color \'{}\' not a valid color follow R;G;B format')
-    elif color.count(';') == 0 and color not in COLORS:
-        raise InvalidColor('Specified color \'{}\' not found in ANSI COLORS list'.format(color))
+    elif color.count(';') == 0 and color not in COLOR_CODES:
+        raise InvalidColor('Specified color \'{}\' not found in ANSI COLOR_CODES list'.format(color))
     # validate entry
     try:
-        ascii_code = COLORS[color]
+        ascii_code = COLOR_CODES[color]
         if isBackground:
             ascii_code += 10
     except KeyError:
@@ -829,7 +829,7 @@ def main():
         exit(0)
 
     if opts.color == 'list':
-        print('[0-255];[0-255];[0-255] (RGB)\n' + '\n'.join((sorted(COLORS.keys()))))
+        print('[0-255];[0-255];[0-255] (RGB)\n' + '\n'.join((sorted(COLOR_CODES.keys()))))
         exit(0)
 
     if opts.info_font:
