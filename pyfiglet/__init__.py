@@ -44,16 +44,16 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
                'LIGHT_MAGENTA': 95, 'LIGHT_CYAN': 96, 'WHITE': 97, 'RESET': 0
 }
 
+RESET_COLORS = '\033[0m'
+
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
     return fig.renderText(text)
 
 
 def print_figlet(text, font=DEFAULT_FONT, foreground=None, background=None, **kwargs):
-    foreground_color = __color_to_ansi(foreground, isBackground=False)
-    background_color = __color_to_ansi(background, isBackground=True)
-    colors_string = foreground_color + background_color    
-    reset_colors = '' if colors_string == '' else  __color_to_ansi('RESET', False)
+    colors_string = parse_color(foreground, background)
+    reset_colors = '' if colors_string == '' else  RESET_COLORS
     print(colors_string + figlet_format(text, font, **kwargs) + reset_colors)
 
 
@@ -78,6 +78,12 @@ class FontNotFound(FigletError):
 class FontError(FigletError):
     """
     Raised when there is a problem parsing a font file
+    """
+
+
+class InvalidColor(FigletError):
+    """
+    Raised when the color passed is invalid
     """
 
 
@@ -767,7 +773,7 @@ class Figlet(object):
         return self.Font.getFonts()
 
 
-def __color_to_ansi(color, isBackground):
+def color_to_ansi(color, isBackground):
     if not color:
         return ''
     if color.count(';') > 0 and color.count(';') != 2:
@@ -776,17 +782,19 @@ def __color_to_ansi(color, isBackground):
         raise InvalidColor('Specified color \'{}\' not found in ANSI COLOR_CODES list'.format(color))
     # validate entry
     try:
-        ascii_code = COLOR_CODES[color]
+        ansi_code = COLOR_CODES[color]
         if isBackground:
-            ascii_code += 10
+            ansi_code += 10
     except KeyError:
-        ascii_code = 48 if isBackground else 38
-        ascii_code = '{};2;{}'.format(ascii_code, color)
-    return '\033[{}m'.format(str(ascii_code))
+        ansi_code = 48 if isBackground else 38
+        ansi_code = '{};2;{}'.format(ansi_code, color)
+    return '\033[{}m'.format(str(ansi_code))
 
 
-class InvalidColor(Exception):
-    pass
+def parse_color(foreground, background):
+    foreground_color = color_to_ansi(foreground, isBackground=False)
+    background_color = color_to_ansi(background, isBackground=True)
+    return foreground_color + background_color
 
 
 def main():
@@ -829,7 +837,7 @@ def main():
         exit(0)
 
     if opts.color == 'list':
-        print('[0-255];[0-255];[0-255] (RGB)\n' + '\n'.join((sorted(COLOR_CODES.keys()))))
+        print('[0-255];[0-255];[0-255] # RGB\n' + '\n'.join((sorted(COLOR_CODES.keys()))))
         exit(0)
 
     if opts.info_font:
@@ -860,13 +868,18 @@ def main():
         # Set stdout to binary mode
         sys.stdout = sys.stdout.detach()
 
-    if ':' not in opts.color:
-        opts.color += ':'
-    foreground_color = __color_to_ansi(opts.color.split(':', 1)[0], isBackground=False)
-    background_color = __color_to_ansi(opts.color.split(':', 1)[1], isBackground=True)
-    colors_string = foreground_color + background_color
-    reset_colors = '' if colors_string == '' else  __color_to_ansi('RESET', False)
-    sys.stdout.write((colors_string + (r + '\n') + reset_colors).encode('UTF-8'))
+    foreground, _, background = opts.color.partition(":")
+    colors_string = parse_color(foreground, background)
+
+    if colors_string:
+        sys.stdout.write(colors_string)
+
+    sys.stdout.write(r.encode('UTF-8'))
+    sys.stdout.write('\n')
+
+    if colors_string:
+        sys.stdout.write(RESET_COLORS)
+
     return 0
 
 
