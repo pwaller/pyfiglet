@@ -44,17 +44,22 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
                'LIGHT_MAGENTA': 95, 'LIGHT_CYAN': 96, 'WHITE': 97, 'RESET': 0
 }
 
-RESET_COLORS = '\033[0m'
+RESET_COLORS = b'\033[0m'
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
     return fig.renderText(text)
 
 
-def print_figlet(text, font=DEFAULT_FONT, foreground=None, background=None, **kwargs):
-    colors_string = parse_color(foreground, background)
-    reset_colors = '' if colors_string == '' else  RESET_COLORS
-    print(colors_string + figlet_format(text, font, **kwargs) + reset_colors)
+def print_figlet(text, font=DEFAULT_FONT, colors=":", **kwargs):
+    ansiColors  = parse_color(colors)
+    if ansiColors:
+        print(ansiColors)
+
+    print(figlet_format(text, font, **kwargs))
+
+    if ansiColors:
+        print(RESET_COLORS)
 
 
 class FigletError(Exception):
@@ -776,25 +781,28 @@ class Figlet(object):
 def color_to_ansi(color, isBackground):
     if not color:
         return ''
+
     if color.count(';') > 0 and color.count(';') != 2:
-        raise InvalidColor('Specified color \'{}\' not a valid color follow R;G;B format')
+        raise InvalidColor('Specified color \'{}\' not a valid color in R;G;B format')
     elif color.count(';') == 0 and color not in COLOR_CODES:
         raise InvalidColor('Specified color \'{}\' not found in ANSI COLOR_CODES list'.format(color))
-    # validate entry
-    try:
-        ansi_code = COLOR_CODES[color]
+
+    if color in COLOR_CODES:
+        ansiCode = COLOR_CODES[color]
         if isBackground:
-            ansi_code += 10
-    except KeyError:
-        ansi_code = 48 if isBackground else 38
-        ansi_code = '{};2;{}'.format(ansi_code, color)
-    return '\033[{}m'.format(str(ansi_code))
+            ansiCode += 10
+    else:
+        ansiCode = 48 if isBackground else 38
+        ansiCode = '{};2;{}'.format(ansiCode, color)
+
+    return '\033[{}m'.format(ansiCode)
 
 
-def parse_color(foreground, background):
-    foreground_color = color_to_ansi(foreground, isBackground=False)
-    background_color = color_to_ansi(background, isBackground=True)
-    return foreground_color + background_color
+def parse_color(color):
+    foreground, _, background = color.partition(":")
+    ansiForeground = color_to_ansi(foreground, isBackground=False)
+    ansiBackground = color_to_ansi(background, isBackground=True)
+    return ansiForeground + ansiBackground
 
 
 def main():
@@ -868,16 +876,14 @@ def main():
         # Set stdout to binary mode
         sys.stdout = sys.stdout.detach()
 
-    foreground, _, background = opts.color.partition(":")
-    colors_string = parse_color(foreground, background)
-
-    if colors_string:
-        sys.stdout.write(colors_string)
+    ansiColors = parse_color(opts.color)
+    if ansiColors:
+        sys.stdout.write(ansiColors.encode('UTF-8'))
 
     sys.stdout.write(r.encode('UTF-8'))
-    sys.stdout.write('\n')
+    sys.stdout.write(b'\n')
 
-    if colors_string:
+    if ansiColors:
         sys.stdout.write(RESET_COLORS)
 
     return 0
