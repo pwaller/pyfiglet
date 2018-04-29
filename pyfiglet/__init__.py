@@ -39,14 +39,29 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 DEFAULT_FONT = 'standard'
 
+COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'MAGENTA': 35, 'CYAN': 36, 'LIGHT_GRAY': 37,
+               'DEFAULT': 39, 'DARK_GRAY': 90, 'LIGHT_RED': 91, 'LIGHT_GREEN': 92, 'LIGHT_YELLOW': 93, 'LIGHT_BLUE': 94,
+               'LIGHT_MAGENTA': 95, 'LIGHT_CYAN': 96, 'WHITE': 97, 'RESET': 0
+}
+
+RESET_COLORS = b'\033[0m'
+
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
     return fig.renderText(text)
 
 
-def print_figlet(text, font=DEFAULT_FONT, **kwargs):
+def print_figlet(text, font=DEFAULT_FONT, colors=":", **kwargs):
+    ansiColors = parse_color(colors)
+    if ansiColors:
+        sys.stdout.write(ansiColors)
+
     print(figlet_format(text, font, **kwargs))
+
+    if ansiColors:
+        sys.stdout.write(RESET_COLORS.decode('UTF-8', 'replace'))
+        sys.stdout.flush()
 
 
 class FigletError(Exception):
@@ -70,6 +85,12 @@ class FontNotFound(FigletError):
 class FontError(FigletError):
     """
     Raised when there is a problem parsing a font file
+    """
+
+
+class InvalidColor(FigletError):
+    """
+    Raised when the color passed is invalid
     """
 
 
@@ -759,6 +780,33 @@ class Figlet(object):
         return self.Font.getFonts()
 
 
+def color_to_ansi(color, isBackground):
+    if not color:
+        return ''
+
+    if color.count(';') > 0 and color.count(';') != 2:
+        raise InvalidColor('Specified color \'{}\' not a valid color in R;G;B format')
+    elif color.count(';') == 0 and color not in COLOR_CODES:
+        raise InvalidColor('Specified color \'{}\' not found in ANSI COLOR_CODES list'.format(color))
+
+    if color in COLOR_CODES:
+        ansiCode = COLOR_CODES[color]
+        if isBackground:
+            ansiCode += 10
+    else:
+        ansiCode = 48 if isBackground else 38
+        ansiCode = '{};2;{}'.format(ansiCode, color)
+
+    return '\033[{}m'.format(ansiCode)
+
+
+def parse_color(color):
+    foreground, _, background = color.partition(":")
+    ansiForeground = color_to_ansi(foreground, isBackground=False)
+    ansiBackground = color_to_ansi(background, isBackground=True)
+    return ansiForeground + ansiBackground
+
+
 def main():
     parser = OptionParser(version=__version__,
                           usage='%prog [options] [text..]')
@@ -785,10 +833,21 @@ def main():
                       help='show installed fonts list')
     parser.add_option('-i', '--info_font', action='store_true', default=False,
                       help='show font\'s information, use with -f FONT')
+    parser.add_option('-c', '--color', default=':',
+                      help='''prints text with passed foreground color,
+                            --color=foreground:background
+                            --color=:background\t\t\t # only background
+                            --color=foreground | foreground:\t # only foreground
+                            --color=list\t\t\t # list all colors
+                            COLOR = list[COLOR] | [0-255];[0-255];[0-255] (RGB)''')
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
         print('\n'.join(sorted(FigletFont.getFonts())))
+        exit(0)
+
+    if opts.color == 'list':
+        print('[0-255];[0-255];[0-255] # RGB\n' + '\n'.join((sorted(COLOR_CODES.keys()))))
         exit(0)
 
     if opts.info_font:
@@ -819,7 +878,16 @@ def main():
         # Set stdout to binary mode
         sys.stdout = sys.stdout.detach()
 
-    sys.stdout.write((r + '\n').encode('UTF-8'))
+    ansiColors = parse_color(opts.color)
+    if ansiColors:
+        sys.stdout.write(ansiColors.encode('UTF-8'))
+
+    sys.stdout.write(r.encode('UTF-8'))
+    sys.stdout.write(b'\n')
+
+    if ansiColors:
+        sys.stdout.write(RESET_COLORS)
+
     return 0
 
 
