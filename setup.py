@@ -30,7 +30,6 @@ setup(
         'Natural Language :: Macedonian',
         'Natural Language :: Russian',
         'Natural Language :: Serbian',
-        'Natural Language :: Ukranian',
         'Operating System :: Unix',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
