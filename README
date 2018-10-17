@@ -102,6 +102,11 @@ LICENSE
 
 CHANGELOG
 
+        2018-10-17 0.7.6
+
+            #57 Implement colored print
+            #53 Allow fonts to be specified by path
+
         2016-06-12 0.7.5
 
             #46 Add 100+ fonts from java.de figlet fonts collection v4.0
