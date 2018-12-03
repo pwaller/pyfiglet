@@ -10,7 +10,9 @@ from __future__ import print_function, unicode_literals
 import os
 import pkg_resources
 import re
+import shutil
 import sys
+import zipfile
 from optparse import OptionParser
 
 from .version import __version__
@@ -45,6 +47,8 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
 }
 
 RESET_COLORS = b'\033[0m'
+
+SHARED_DIRECTORY = '%APPDATA%/pyfiglet/' if sys.platform == 'win32' else '/usr/local/pyfiglet/'
 
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
@@ -123,9 +127,12 @@ class FigletFont(object):
                 data = pkg_resources.resource_string('pyfiglet.fonts', fn)
                 data = data.decode('UTF-8', 'replace')
                 return data
-            elif os.path.isfile(font):
-                with open(font, 'rb') as f:
-                    return f.read().decode('UTF-8', 'replace')
+            else:
+                for location in ("./", SHARED_DIRECTORY):
+                    full_name = os.path.join(location, fn)
+                    if os.path.isfile(full_name):
+                        with open(full_name, 'rb') as f:
+                            return f.read().decode('UTF-8', 'replace')
         else:
             raise FontNotFound(font)
 
@@ -134,8 +141,11 @@ class FigletFont(object):
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
+        full_file = os.path.join(SHARED_DIRECTORY, font)
         if os.path.isfile(font):
             f = open(font, 'rb')
+        elif os.path.isfile(full_file):
+            f = open(full_file, 'rb')
         else:
             f = pkg_resources.resource_stream('pyfiglet.fonts', font)
         header = f.readline().decode('UTF-8', 'replace')
@@ -144,8 +154,11 @@ class FigletFont(object):
 
     @classmethod
     def getFonts(cls):
+        all_files = pkg_resources.resource_listdir('pyfiglet', 'fonts')
+        if os.path.isdir(SHARED_DIRECTORY):
+             all_files += os.listdir(SHARED_DIRECTORY)
         return [font.rsplit('.', 2)[0] for font
-                in pkg_resources.resource_listdir('pyfiglet', 'fonts')
+                in all_files
                 if cls.isValidFont(font)]
 
     @classmethod
@@ -168,6 +181,38 @@ class FigletFont(object):
                     and reEndMarker.search(line) is None):
                 infos.append(line)
         return '\n'.join(infos) if not short else infos[0]
+
+    @staticmethod
+    def installFonts(file_name):
+        """
+        Install the specified font file to this system.
+        """
+        if isinstance(pkg_resources.get_provider('pyfiglet'), pkg_resources.ZipProvider):
+            # Figlet is installed using a zipped resource - don't try to upload to it.
+            location = SHARED_DIRECTORY
+        else:
+            # Figlet looks like a standard directory - so lets use that to install new fonts.
+            location = pkg_resources.resource_filename('pyfiglet', 'fonts')
+
+        print("Installing {} to {}".format(file_name, location))
+
+        # Make sure the required destination directory exists
+        if not os.path.exists(location):
+            os.makedirs(location)
+
+        # Copy the font definitions - unpacking any zip files as needed.
+        if os.path.splitext(file_name)[1].lower() == ".zip":
+            # Ignore any structure inside the ZIP file.
+            with zipfile.ZipFile(file_name) as zip_file:
+                for font in zip_file.namelist():
+                    font_file = os.path.basename(font)
+                    if not font_file:
+                        continue
+                    src = zip_file.open(font)
+                    dest = open(os.path.join(location, font_file), "wb")
+                    shutil.copyfileobj(src, dest)
+        else:
+            shutil.copy(file_name, location)
 
     def loadFont(self):
         """
@@ -833,6 +878,8 @@ def main():
                       help='show installed fonts list')
     parser.add_option('-i', '--info_font', action='store_true', default=False,
                       help='show font\'s information, use with -f FONT')
+    parser.add_option('-L', '--load', default=None,
+                      help='load and install the specified font definition')
     parser.add_option('-c', '--color', default=':',
                       help='''prints text with passed foreground color,
                             --color=foreground:background
@@ -852,6 +899,10 @@ def main():
 
     if opts.info_font:
         print(FigletFont.infoFont(opts.font))
+        exit(0)
+
+    if opts.load:
+        FigletFont.installFonts(opts.load)
         exit(0)
 
     if len(args) == 0:
