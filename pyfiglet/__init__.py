@@ -48,7 +48,7 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
 
 RESET_COLORS = b'\033[0m'
 
-SHARED_DIRECTORY = '%APPDATA%/pyfiglet/' if sys.platform == 'win32' else '/usr/local/pyfiglet/'
+SHARED_DIRECTORY = '%APPDATA%/pyfiglet/' if sys.platform == 'win32' else '/usr/local/share/pyfiglet/'
 
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
