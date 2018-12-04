@@ -211,8 +211,9 @@ class FigletFont(object):
                     font_file = os.path.basename(font)
                     if not font_file:
                         continue
-                    with zip_file.open(font) as src, open(os.path.join(location, font_file), "wb") as dest:
-                        shutil.copyfileobj(src, dest)
+                    with zip_file.open(font) as src:
+                        with open(os.path.join(location, font_file), "wb") as dest:
+                            shutil.copyfileobj(src, dest)
         else:
             shutil.copy(file_name, location)
 
