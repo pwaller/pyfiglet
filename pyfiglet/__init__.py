@@ -48,7 +48,10 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
 
 RESET_COLORS = b'\033[0m'
 
-SHARED_DIRECTORY = '%APPDATA%/pyfiglet/' if sys.platform == 'win32' else '/usr/local/share/pyfiglet/'
+if sys.platform == 'win32':
+    SHARED_DIRECTORY = os.path.join(os.environ["APPDATA"], "pyfiglet")
+else:
+    SHARED_DIRECTORY = '/usr/local/share/pyfiglet/'
 
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
@@ -208,9 +211,8 @@ class FigletFont(object):
                     font_file = os.path.basename(font)
                     if not font_file:
                         continue
-                    src = zip_file.open(font)
-                    dest = open(os.path.join(location, font_file), "wb")
-                    shutil.copyfileobj(src, dest)
+                    with zip_file.open(font) as src, open(os.path.join(location, font_file), "wb") as dest:
+                        shutil.copyfileobj(src, dest)
         else:
             shutil.copy(file_name, location)
 
