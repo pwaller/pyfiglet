@@ -48,6 +48,11 @@ FAQ
            fonts and so we had to remove them.  Full details of the change and
            why we did it are in https://github.com/pwaller/pyfiglet/issues/59.
 
+        Q. Where can I find these and other fonts?
+           A quick search for "figlet fonts" on your favourite search engine
+           should give you what you need.  However, if you are looking for the
+           specific removed fonts, please go to http://www.jave.de/figlet/fonts.html.
+
 USAGE
 
         You can use pyfiglet in one of two ways. First, it operates on the
