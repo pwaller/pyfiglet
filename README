@@ -39,10 +39,19 @@ FAQ
         A. Yes, under the terms of the GPL (see LICENSE below).
 
         Q. I improved this code, what should I do with it?
-        A. You can mail patches to <cjones@insub.org>. Particularly bugfixes.
+        A. You can submit changes to https://github.com/pwaller/pyfiglet/pulls.
            If you make changes to the kerning/mushing/rendering portion, PLEASE
            test it throroughly. The code is fragile and complex.
 
+        Q. Where did my font go?
+        A. It turns out that we didn't have distribution rights for some of the
+           fonts and so we had to remove them.  Full details of the change and
+           why we did it are in https://github.com/pwaller/pyfiglet/issues/59.
+
+        Q. Where can I find these and other fonts?
+        A. Do a quick search for "figlet fonts" on your favourite search engine
+           should give you what you need.  However, if you are looking for the
+           specific removed fonts, please go to http://www.jave.de/figlet/fonts.html.
 
 USAGE
 
@@ -59,6 +68,14 @@ USAGE
         f = Figlet(font='slant')
         print f.renderText('text to render')
 
+        If you have found some new fonts that you want to use, you can use the
+        command line interface to install your font file as follows:
+
+        pyfiglet -L <font file>
+
+        The font file can be a ZIP file of lots of fonts or just a single font.
+        Depending on how you installed pyfiglet, you may find that you need
+        root access to install the font - e.g. `sudo pyfiglet -L <font file>`.
 
 AUTHOR
 
