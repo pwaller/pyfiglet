@@ -14,13 +14,12 @@ setup(
     name='pyfiglet',
     version=get_version(),
     description='Pure-python FIGlet implementation',
-    license='GPLv2+',
+    license='MIT',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v2 or later '
-        '(GPLv2+)',
+        'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         # For Katakana
         'Natural Language :: Japanese',
