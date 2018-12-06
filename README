@@ -111,6 +111,11 @@ LICENSE
 
 CHANGELOG
 
+        2018-10-17 0.8.0
+            #62 Change LICENSE to MIT
+            #61 Provide font installation option (-L) and remove
+                unlicenced fonts from the distribution
+
         2018-10-17 0.7.6
 
             #57 Implement colored print
