@@ -131,18 +131,35 @@ class FigletFont(object):
         """
         Load font data if exist
         """
+        # Find a plausible looking font file.
+        data = None
+        f = None
         for extension in ('tlf', 'flf'):
             fn = '%s.%s' % (font, extension)
             if pkg_resources.resource_exists('pyfiglet.fonts', fn):
-                data = pkg_resources.resource_string('pyfiglet.fonts', fn)
-                data = data.decode('UTF-8', 'replace')
-                return data
+                f = pkg_resources.resource_stream('pyfiglet.fonts', fn)
+                break
             else:
                 for location in ("./", SHARED_DIRECTORY):
                     full_name = os.path.join(location, fn)
                     if os.path.isfile(full_name):
-                        with open(full_name, 'rb') as f:
-                            return f.read().decode('UTF-8', 'replace')
+                        f = open(full_name, 'rb')
+                        break
+
+        # Unzip the first file if this file/stream looks like a ZIP file.
+        if f:
+            if zipfile.is_zipfile(f):
+                with zipfile.ZipFile(f) as zip_file:
+                    zip_font = zip_file.open(zip_file.namelist()[0])
+                    data = zip_font.read()
+            else:
+                # ZIP file check moves the current file pointer - reset to start of file.
+                f.seek(0)
+                data = f.read()
+
+        # Return the decoded data (if any).
+        if data:
+            return data.decode('UTF-8', 'replace')
         else:
             raise FontNotFound(font)
 
@@ -158,8 +175,17 @@ class FigletFont(object):
             f = open(full_file, 'rb')
         else:
             f = pkg_resources.resource_stream('pyfiglet.fonts', font)
-        header = f.readline().decode('UTF-8', 'replace')
+
+        if zipfile.is_zipfile(f):
+            # If we have a match, the ZIP file spec says we should just read the first file in the ZIP.
+            with zipfile.ZipFile(f) as zip_file:
+                zip_font = zip_file.open(zip_file.namelist()[0])
+                header = zip_font.readline().decode('UTF-8', 'replace')
+        else:
+            header = f.readline().decode('UTF-8', 'replace')
+
         f.close()
+
         return cls.reMagicNumber.search(header)
 
     @classmethod
