@@ -896,9 +896,7 @@ def main():
         usage_color="white-bold-underline",
         shopt_color="white",
         lopt_color="white",
-        help_color="yellow",
         metavar_color="white-bold",
-        description_color="white",
     )
 
     # Check if the system supports ANSI escape codes
@@ -939,9 +937,15 @@ def main():
     parser.add_option('-c', '--color', default=':',
                       help='''prints text with passed foreground color,
                             --color=foreground:background
-                            --color=:background\t\t\t # only background
-                            --color=foreground | foreground:\t # only foreground
-                            --color=list\t\t\t # list all colors
+                            --color=:background\n
+                            ^ only background
+
+                            --color=foreground | foreground\n
+                            ^ only foreground
+
+                            --color=list\n
+                            ^ list colors
+
                             COLOR = list[COLOR] | [0-255];[0-255];[0-255] (RGB)''')
     opts, args = parser.parse_args()
 
