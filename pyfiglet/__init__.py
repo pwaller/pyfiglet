@@ -13,7 +13,9 @@ import re
 import shutil
 import sys
 import zipfile
-from optparse import OptionParser
+
+from optparse import OptionParser, HelpFormatter
+from ._vendor.optparse_pretty import CompactColorHelpFormatter
 
 from .version import __version__
 
@@ -192,7 +194,7 @@ class FigletFont(object):
     def getFonts(cls):
         all_files = pkg_resources.resource_listdir('pyfiglet', 'fonts')
         if os.path.isdir(SHARED_DIRECTORY):
-             all_files += os.listdir(SHARED_DIRECTORY)
+             all_files.extend(os.listdir(SHARED_DIRECTORY))
         return [font.rsplit('.', 2)[0] for font
                 in all_files
                 if cls.isValidFont(font)]
@@ -889,8 +891,26 @@ def parse_color(color):
 
 
 def main():
+    ColorFormatter = CompactColorHelpFormatter(
+        heading_color="white-bold",
+        usage_color="white-bold-underline",
+        shopt_color="white",
+        lopt_color="white",
+        help_color="yellow",
+        metavar_color="white-bold",
+        description_color="white",
+    )
+
+    # Check if the system supports ANSI escape codes
+    plat = sys.platform
+    supported = (plat != "Pocket PC" and (plat != "win32" or "ANSICON" in os.environ))
+    is_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty() or False
+    is_ansi = (supported and is_tty)
+
     parser = OptionParser(version=__version__,
-                          usage='%prog [options] [text..]')
+                          usage='%prog [options] [text..]',
+    description="Pure-python FIGlet implementation", formatter=ColorFormatter if is_ansi else HelpFormatter)
+
     parser.add_option('-f', '--font', default=DEFAULT_FONT,
                       help='font to render with (default: %default)',
                       metavar='FONT')
