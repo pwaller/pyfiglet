@@ -1,3 +1,4 @@
+# Ignore Python-related files
 *.pyc
 *~
 .*.swp
@@ -5,3 +6,9 @@
 /dist/
 /pyfiglet.egg-info/
 env*/
+venv*/
+.venv*/
+Pipfile*
+# Ignore editors
+.vscode*/
+.editorconfig
