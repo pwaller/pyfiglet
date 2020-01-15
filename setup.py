@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from setuptools import setup
-import sys
+from setuptools import setup, find_packages
+import os, sys
 
 
 def get_version():
@@ -10,10 +10,21 @@ def get_version():
     sys.path.pop(0)
     return __version__
 
+
+def read_readme(): # For reading the README.md
+    with open(os.path.join(os.path.dirname(__file__), "README.md")) as f:
+        return f.read().rstrip()
+
+def parse_requirements(): # Used if requirements are set
+    with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as f:
+        return f.read().strip().splitlines()
+
+
 setup(
     name='pyfiglet',
     version=get_version(),
     description='Pure-python FIGlet implementation',
+    long_description=read_readme(),
     license='MIT',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -41,13 +52,14 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Text Processing',
         'Topic :: Text Processing :: Fonts',
     ],
     author='Peter Waller (Thanks to Christopher Jones and Stefano Rivera)',
     author_email='p@pwaller.net',
     url='https://github.com/pwaller/pyfiglet',
-    packages=['pyfiglet', 'pyfiglet.fonts'],
+    packages=find_packages(),
     package_data={'pyfiglet.fonts': ['*.flf', '*.flc']},
     entry_points={
         'console_scripts': [
