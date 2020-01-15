@@ -6,8 +6,6 @@ Packaged by Peter Waller (p@pwaller.net),
 
 various enhancements by Stefano Rivera (stefano@rivera.za.net).
 
-Convertion to markdown by Sxnic
-
 ```                                                                     
                          _|_|  _|            _|              _|      
  _|_|_|    _|    _|    _|            _|_|_|  _|    _|_|    _|_|_|_|  
