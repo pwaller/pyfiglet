@@ -19,6 +19,17 @@ def parse_requirements(): # Used if requirements are set
     with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as f:
         return f.read().strip().splitlines()
 
+def add_fonts():
+    # To make sure some fonts don't get loaded, due to their encryption
+    included = ["*.flf", "*.flc"]
+    excluded = ["ascii9", "ascii12", "smascii", "mono", "bigmono", "smascii", "bigascii", "smmono"]
+    _excl = tuple(excluded)
+    for font in os.listdir(os.path.join(os.path.dirname(__file__), "pyfiglet", "fonts")):
+        if os.path.splitext(font)[1] == ".tlf":
+            if not font.startswith(_excl):
+                included.append(font)
+
+    return included
 
 setup(
     name='pyfiglet',
@@ -60,7 +71,7 @@ setup(
     author_email='p@pwaller.net',
     url='https://github.com/pwaller/pyfiglet',
     packages=find_packages(),
-    package_data={'pyfiglet.fonts': ['*.flf', '*.flc', '*.tlf']},
+    package_data={'pyfiglet.fonts': add_fonts()},
     entry_points={
         'console_scripts': [
             'pyfiglet = pyfiglet:main',

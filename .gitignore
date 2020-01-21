@@ -1,4 +1,5 @@
 # Ignore Python-related files
+__pycache__
 *.pyc
 *~
 .*.swp

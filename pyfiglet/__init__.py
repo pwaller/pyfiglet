@@ -137,7 +137,7 @@ class FigletFont(object):
         data = None
         f = None
         for extension in ('tlf', 'flf'):
-            fn = '%s.%s' % (font, extension)
+            fn = "{!s}.{!s}".format(font, extension)
             if pkg_resources.resource_exists('pyfiglet.fonts', fn):
                 f = pkg_resources.resource_stream('pyfiglet.fonts', fn)
                 break
@@ -170,34 +170,45 @@ class FigletFont(object):
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
+        font_path = None
         full_file = os.path.join(SHARED_DIRECTORY, font)
-        if os.path.isfile(font):
-            f = open(font, 'rb')
-        elif os.path.isfile(full_file):
-            f = open(full_file, 'rb')
-        else:
-            f = pkg_resources.resource_stream('pyfiglet.fonts', font)
+        header = None
+        result = False
 
-        if zipfile.is_zipfile(f):
+        if os.path.isfile(font):
+            font_path = font
+        elif os.path.isfile(full_file):
+            font_path = full_file
+        else:
+            font_path = pkg_resources.resource_filename('pyfiglet.fonts', font)
+
+        if zipfile.is_zipfile(font_path):
             # If we have a match, the ZIP file spec says we should just read the first file in the ZIP.
-            with zipfile.ZipFile(f) as zip_file:
+            with zipfile.ZipFile(font_path) as zip_file:
                 zip_font = zip_file.open(zip_file.namelist()[0])
                 header = zip_font.readline().decode('UTF-8', 'replace')
+
+        if header == None:
+            with open(font_path, 'rb') as file:
+                fheader = file.readline().decode("UTF-8", 'replace')
+                magick = cls.reMagicNumber.search(fheader)
+                if magick:
+                    result = True
         else:
-            header = f.readline().decode('UTF-8', 'replace')
+            magick = cls.reMagicNumber.search(header)
+            if magick:
+                result = True
 
-        f.close()
-
-        return cls.reMagicNumber.search(header)
+        return result
 
     @classmethod
     def getFonts(cls):
         all_files = pkg_resources.resource_listdir('pyfiglet', 'fonts')
         if os.path.isdir(SHARED_DIRECTORY):
-             all_files.extend(os.listdir(SHARED_DIRECTORY))
-        return [font.rsplit('.', 2)[0] for font
-                in all_files
-                if cls.isValidFont(font)]
+            all_files.extend(os.listdir(SHARED_DIRECTORY))
+            # all_files += os.listdir(SHARED_DIRECTORY)
+        all_fonts = [font.rsplit(".", 2)[0] for font in all_files if cls.isValidFont(font)]
+        return all_fonts
 
     @classmethod
     def infoFont(cls, font, short=False):
