@@ -280,7 +280,7 @@ class FigletFont(object):
                 fullLayout = int(header[7])
 
             # if the new layout style isn't available,
-            # convert old layout style. backwards compatability
+            # convert old layout style. backwards compatibility
             if fullLayout is None:
                 if oldLayout == 0:
                     fullLayout = 64
