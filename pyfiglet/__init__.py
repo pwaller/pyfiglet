@@ -430,7 +430,8 @@ class FigletRenderingEngine(object):
                                 self.base.Font,
                                 self.base.direction,
                                 self.base.width,
-                                self.base.justify)
+                                self.base.justify,
+                                self.base.exact)
 
         while builder.isNotFinished():
             builder.addCharToProduct()
@@ -458,13 +459,14 @@ class FigletBuilder(object):
     """
     Represent the internals of the build process
     """
-    def __init__(self, text, font, direction, width, justify):
+    def __init__(self, text, font, direction, width, justify, exact):
 
         self.text = list(map(ord, list(text)))
         self.direction = direction
         self.width = width
         self.font = font
         self.justify = justify
+        self.exact = exact
 
         self.iterator = 0
         self.maxSmush = 0
@@ -666,6 +668,9 @@ class FigletBuilder(object):
                 buffer[row] = (
                         ' ' * int((self.width - len(buffer[row])) / 2)
                         ) + buffer[row]
+        if self.exact:
+            for row in range(0, self.font.height):
+                buffer[row] = buffer[row].ljust(self.width, ' ')
         return buffer
 
     def replaceHardblanks(self, buffer):
@@ -812,11 +817,12 @@ class Figlet(object):
     """
 
     def __init__(self, font=DEFAULT_FONT, direction='auto', justify='auto',
-                 width=80):
+                 width=80, exact=False):
         self.font = font
         self._direction = direction
         self._justify = justify
         self.width = width
+        self.exact = exact
         self.setFont()
         self.engine = FigletRenderingEngine(base=self)
 
@@ -906,6 +912,8 @@ def main():
     parser.add_option('-w', '--width', type='int', default=80, metavar='COLS',
                       help='set terminal width for wrapping/justification '
                            '(default: %default)')
+    parser.add_option('-e', '--exact', action='store_true', default=False,
+                      help='add additional spaces to keep exact width')
     parser.add_option('-r', '--reverse', action='store_true', default=False,
                       help='shows mirror image of output text')
     parser.add_option('-F', '--flip', action='store_true', default=False,
@@ -953,6 +961,7 @@ def main():
     f = Figlet(
         font=opts.font, direction=opts.direction,
         justify=opts.justify, width=opts.width,
+        exact=opts.exact,
     )
 
     r = f.renderText(text)
