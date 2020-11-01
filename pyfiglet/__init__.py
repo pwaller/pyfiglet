@@ -864,7 +864,7 @@ class Figlet(object):
 def color_to_ansi(color, isBackground):
     if not color:
         return ''
-
+    color = color.upper()
     if color.count(';') > 0 and color.count(';') != 2:
         raise InvalidColor('Specified color \'{}\' not a valid color in R;G;B format')
     elif color.count(';') == 0 and color not in COLOR_CODES:
