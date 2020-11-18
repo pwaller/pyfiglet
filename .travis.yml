@@ -1,4 +1,7 @@
 language: python
+arch:
+ - amd64
+ - ppc64le
 python:
  - "2.7"
  - "3.5"
@@ -8,6 +11,12 @@ python:
  - "3.9"
  - "pypy"
  - "pypy3"
+jobs:
+  exclude:
+   - arch : ppc64le
+     python : pypy
+   - arch : ppc64le
+     python : pypy3	 
 before_install:
  - "sudo apt-get update -qq"
  - "sudo apt-get install -qq toilet figlet"
