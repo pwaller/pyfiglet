@@ -312,7 +312,7 @@ class FigletFont(object):
                     line = data.pop(0)
                     if end is None:
                         end = self.reEndMarker.search(line).group(1)
-                        end = re.compile(re.escape(end) + r'{1,2}$')
+                        end = re.compile(re.escape(end) + r'{1,2}\s*$')
 
                     line = end.sub('', line)
 
