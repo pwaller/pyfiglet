@@ -24,6 +24,7 @@ jobs:
         sudo chmod 777 /usr/local/share/pyfiglet/
         python -m pip install --upgrade pip
         pip install -r dev-requirements.txt
+        make full
         python setup.py install
     - name: Test with test.py
       run: |
