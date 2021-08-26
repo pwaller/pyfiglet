@@ -64,7 +64,7 @@ FAQ
         Q. What about those other fonts?
         A. While there isn't a watertight case for the license, we believe that
            any legal constraint for these fonts has long expired and so they
-           are public domain, so are continuting to redistribute via pypi.  If
+           are public domain, so are continuing to redistribute via pypi.  If
            an owner of any of these fonts wants us to stop, please just
            raise an issue on https://github.com/pwaller/pyfiglet/issues
            proving your ownership and we will remove the requested fonts.
