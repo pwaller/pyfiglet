@@ -13,5 +13,6 @@ before_install:
  - "sudo apt-get install -qq toilet figlet"
 install:
     - "pip install -r dev-requirements.txt"
+    - "make full"
     - "pip install ."
 script: python pyfiglet/test.py && pytest -vv

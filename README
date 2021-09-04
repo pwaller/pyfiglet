@@ -46,12 +46,28 @@ FAQ
         Q. Where did my font go?
         A. It turns out that we didn't have distribution rights for some of the
            fonts and so we had to remove them.  Full details of the change and
-           why we did it are in https://github.com/pwaller/pyfiglet/issues/59.
+           why we did it are in https://github.com/pwaller/pyfiglet/issues/59
+           and https://github.com/pwaller/pyfiglet/issues/89.
 
         Q. Where can I find these and other fonts?
         A. Do a quick search for "figlet fonts" on your favourite search engine
            should give you what you need.  However, if you are looking for the
            specific removed fonts, please go to http://www.jave.de/figlet/fonts.html.
+
+        Q. Why are some fonts missing in <my favourite> distribution?
+        A. Some Linux distributions have very strict legal restrictions on what
+           contributions they will take.  For these systems, we have divided the
+           fonts into ones that have a clear redistribution license and those that
+           don't.  These are the fonts-standard and fonts-contrib directories in
+           this repository.
+
+        Q. What about those other fonts?
+        A. While there isn't a watertight case for the license, we believe that
+           any legal constraint for these fonts has long expired and so they
+           are public domain, so are continuing to redistribute via pypi.  If
+           an owner of any of these fonts wants us to stop, please just
+           raise an issue on https://github.com/pwaller/pyfiglet/issues
+           proving your ownership and we will remove the requested fonts.
 
 USAGE
 
