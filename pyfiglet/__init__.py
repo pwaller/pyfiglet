@@ -409,6 +409,23 @@ class FigletString(unicode_string):
 
         return self.newFromList(out)
 
+    # doesn't do self.strip() because it could remove leading whitespace on first line of the font
+    # doesn't do row.strip() because it could remove empty lines within the font character
+    def strip_surrounding_newlines(self):
+        out = []
+        chars_seen = False
+        for row in self.splitlines():
+            # if the row isn't empty or if we're in the middle of the font character, add the line.
+            if row.strip() != "" or chars_seen:
+                chars_seen = True
+                out.append(row)
+
+        # rstrip to get rid of the trailing newlines
+        return self.newFromList(out).rstrip()
+
+    def normalize_surrounding_newlines(self):
+        return '\n' + self.strip_surrounding_newlines() + '\n'
+
     def newFromList(self, list):
         return FigletString('\n'.join(list) + '\n')
 
@@ -875,7 +892,7 @@ class Figlet(object):
 def color_to_ansi(color, isBackground):
     if not color:
         return ''
-
+    color = color.upper()
     if color.count(';') > 0 and color.count(';') != 2:
         raise InvalidColor('Specified color \'{}\' not a valid color in R;G;B format')
     elif color.count(';') == 0 and color not in COLOR_CODES:
@@ -923,6 +940,10 @@ def main():
                       help='add additional blank characters to keep exact width')
     parser.add_option('-r', '--reverse', action='store_true', default=False,
                       help='shows mirror image of output text')
+    parser.add_option('-n', '--normalize-surrounding-newlines', action='store_true', default=False,
+                      help='output has one empty line before and after')
+    parser.add_option('-s', '--strip-surrounding-newlines', action='store_true', default=False,
+                      help='removes empty leading and trailing lines')                      
     parser.add_option('-F', '--flip', action='store_true', default=False,
                       help='flips rendered output text over')
     parser.add_option('-l', '--list_fonts', action='store_true', default=False,
@@ -976,6 +997,10 @@ def main():
         r = r.reverse()
     if opts.flip:
         r = r.flip()
+    if opts.strip_surrounding_newlines:
+        r = r.strip_surrounding_newlines()
+    elif opts.normalize_surrounding_newlines:
+        r = r.normalize_surrounding_newlines()
 
     if sys.version_info > (3,):
         # Set stdout to binary mode
