@@ -292,7 +292,9 @@ class FigletFont(object):
                 raise FontError("malformed header for %s" % self.font)
 
             hard_blank = header[0]
-            height, base_line, max_length, old_layout, comment_lines = map(int, header[1:6])
+            height, base_line, max_length, old_layout, comment_lines = map(
+                int, header[1:6]
+            )
             print_direction = full_layout = None
 
             # these are all optional for backwards compatibility
@@ -559,7 +561,9 @@ class FigletBuilder(object):
         self.cur_char_width = self.get_cur_width()
         self.max_smush = self.current_smush_amount(cur_char)
 
-        self.current_total_width = len(self.buffer[0]) + self.cur_char_width - self.max_smush
+        self.current_total_width = (
+            len(self.buffer[0]) + self.cur_char_width - self.max_smush
+        )
 
         if self.text[self.iterator] == ord(" "):
             self.blank_markers.append(([row for row in self.buffer], self.iterator))
@@ -662,21 +666,21 @@ class FigletBuilder(object):
         for i in range(0, self.max_smush):
             left, idx = self.get_left_smushed_char(i, add_left)
             right = add_right[i]
-            smushed = self.smush_chars(left=left, right=right)
-            add_left = self.update_smushed_char_in_left_buffer(add_left, idx, smushed)
+            add_left = self.update_smushed_char_in_left_buffer(
+                add_left, idx, self.smush_chars(left=left, right=right)
+            )
         return add_left, add_right
 
     def add_cur_char_row_to_buffer_row(self, cur_char, row):
         add_left, add_right = self.smush_row(cur_char, row)
-        self.buffer[row] = add_left + add_right[self.max_smush:]
+        self.buffer[row] = add_left + add_right[self.max_smush :]
 
     def cut_buffer_common(self):
         self.current_total_width = len(self.buffer[0])
         self.buffer = ["" for i in range(self.font.height)]
         self.blank_markers = list()
         self.prev_char_width = 0
-        cur_char = self.get_cur_char()
-        if cur_char is None:
+        if cur_char := self.get_cur_char() is None:
             return
         self.max_smush = self.current_smush_amount(cur_char)
 
@@ -931,7 +935,9 @@ def color_to_ansi(color, is_background):
 
 def parse_color(color):
     foreground, _, background = color.partition(":")
-    return color_to_ansi(foreground, is_background=False) + color_to_ansi(background, is_background=True)
+    return color_to_ansi(foreground, is_background=False) + color_to_ansi(
+        background, is_background=True
+    )
 
 
 def get_args():
