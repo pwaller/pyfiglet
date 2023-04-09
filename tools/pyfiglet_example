@@ -26,8 +26,8 @@ print_samples() {
     done
 }
 
-useage() {
-    echo "Useage: $0 [options] [text ...]\n"
+usage() {
+    echo "Usage: $0 [options] [text ...]\n"
     echo "Options:"
     echo "-l\t\t\tcreate log file."
     echo "-o [path_to_file]\tspecify the path of log file,\n\t\t\tdefault is $OUTPUT."
@@ -47,7 +47,7 @@ while getopts ":lo:h" opt; do
             fi
             ;;
         h|\?)
-            useage
+            usage
             ;;
     esac
 done
