@@ -934,7 +934,7 @@ def parse_color(color):
     return color_to_ansi(foreground, is_background=False) + color_to_ansi(background, is_background=True)
 
 
-def main():
+def get_args():
     parser = OptionParser(version=__version__, usage="%prog [options] [text..]")
     parser.add_option(
         "-f",
@@ -1028,25 +1028,26 @@ def main():
                             --color=list\t\t\t # list all colors
                             COLOR = list[COLOR] | [0-255];[0-255];[0-255] (RGB)""",
     )
-    opts, args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    opts, args = get_args()
 
     if opts.list_fonts:
         print("\n".join(sorted(FigletFont.get_fonts())))
-        exit(0)
-
-    if opts.color == "list":
+        return 0
+    elif opts.color == "list":
         print(
             "[0-255];[0-255];[0-255] # RGB\n" + "\n".join((sorted(COLOR_CODES.keys())))
         )
-        exit(0)
-
-    if opts.info_font:
+        return 0
+    elif opts.info_font:
         print(FigletFont.info_font(opts.font))
-        exit(0)
-
-    if opts.load:
+        return 0
+    elif opts.load:
         FigletFont.install_fonts(opts.load)
-        exit(0)
+        return 0
 
     if len(args) == 0:
         parser.print_help()
