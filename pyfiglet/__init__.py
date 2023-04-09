@@ -79,7 +79,7 @@ else:
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
-    return fig.renderText(text)
+    return fig.render_text(text)
 
 
 def print_figlet(text, font=DEFAULT_FONT, colors=":", **kwargs):
@@ -132,8 +132,8 @@ class FigletFont(object):
     meta-data about how it should be displayed by default
     """
 
-    reMagicNumber = re.compile(r"^[tf]lf2.")
-    reEndMarker = re.compile(r"(.)\s*$")
+    re_magic_number = re.compile(r"^[tf]lf2.")
+    re_end_marker = re.compile(r"(.)\s*$")
 
     def __init__(self, font=DEFAULT_FONT):
         self.font = font
@@ -141,11 +141,11 @@ class FigletFont(object):
         self.comment = ""
         self.chars = {}
         self.width = {}
-        self.data = self.preloadFont(font)
-        self.loadFont()
+        self.data = self.preload_font(font)
+        self.load_font()
 
     @classmethod
-    def preloadFont(cls, font):
+    def preload_font(cls, font):
         """
         Load font data if exist
         """
@@ -182,7 +182,7 @@ class FigletFont(object):
             raise FontNotFound(font)
 
     @classmethod
-    def isValidFont(cls, font):
+    def is_valid_font(cls, font):
         if not font.endswith((".flf", ".tlf")):
             return False
         f = None
@@ -204,23 +204,23 @@ class FigletFont(object):
 
         f.close()
 
-        return cls.reMagicNumber.search(header)
+        return cls.re_magic_number.search(header)
 
     @classmethod
-    def getFonts(cls):
+    def get_fonts(cls):
         all_files = pkg_resources.resource_listdir("pyfiglet", "fonts")
         if os.path.isdir(SHARED_DIRECTORY):
             all_files += os.listdir(SHARED_DIRECTORY)
-        return [font.rsplit(".", 2)[0] for font in all_files if cls.isValidFont(font)]
+        return [font.rsplit(".", 2)[0] for font in all_files if cls.is_valid_font(font)]
 
     @classmethod
-    def infoFont(cls, font, short=False):
+    def info_font(cls, font, short=False):
         """
         Get informations of font
         """
-        data = FigletFont.preloadFont(font)
+        data = FigletFont.preload_font(font)
         infos = []
-        reStartMarker = re.compile(
+        re_start_marker = re.compile(
             r"""
             ^(FONT|COMMENT|FONTNAME_REGISTRY|FAMILY_NAME|FOUNDRY|WEIGHT_NAME|
               SETWIDTH_NAME|SLANT|ADD_STYLE_NAME|PIXEL_SIZE|POINT_SIZE|
@@ -229,18 +229,18 @@ class FigletFont(object):
               COPYRIGHT|_DEC_|DEFAULT_CHAR|NOTICE|RELATIVE_).*""",
             re.VERBOSE,
         )
-        reEndMarker = re.compile(r"^.*[@#$]$")
+        re_end_marker = re.compile(r"^.*[@#$]$")
         for line in data.splitlines()[0:100]:
             if (
-                cls.reMagicNumber.search(line) is None
-                and reStartMarker.search(line) is None
-                and reEndMarker.search(line) is None
+                cls.re_magic_number.search(line) is None
+                and re_start_marker.search(line) is None
+                and re_end_marker.search(line) is None
             ):
                 infos.append(line)
         return "\n".join(infos) if not short else infos[0]
 
     @staticmethod
-    def installFonts(file_name):
+    def install_fonts(file_name):
         """
         Install the specified font file to this system.
         """
@@ -273,7 +273,7 @@ class FigletFont(object):
         else:
             shutil.copy(file_name, location)
 
-    def loadFont(self):
+    def load_font(self):
         """
         Parse loaded font data for the rendering engine to consume
         """
@@ -282,44 +282,44 @@ class FigletFont(object):
             data = self.data.splitlines()
 
             header = data.pop(0)
-            if self.reMagicNumber.search(header) is None:
+            if self.re_magic_number.search(header) is None:
                 raise FontError("%s is not a valid figlet font" % self.font)
 
-            header = self.reMagicNumber.sub("", header)
+            header = self.re_magic_number.sub("", header)
             header = header.split()
 
             if len(header) < 6:
                 raise FontError("malformed header for %s" % self.font)
 
-            hardBlank = header[0]
-            height, baseLine, maxLength, oldLayout, commentLines = map(int, header[1:6])
-            printDirection = fullLayout = None
+            hard_blank = header[0]
+            height, base_line, max_length, old_layout, comment_lines = map(int, header[1:6])
+            print_direction = full_layout = None
 
-            # these are all optional for backwards compat
+            # these are all optional for backwards compatibility
             if len(header) > 6:
-                printDirection = int(header[6])
+                print_direction = int(header[6])
             if len(header) > 7:
-                fullLayout = int(header[7])
+                full_layout = int(header[7])
 
             # if the new layout style isn't available,
             # convert old layout style. backwards compatibility
-            if fullLayout is None:
-                if oldLayout == 0:
-                    fullLayout = 64
-                elif oldLayout < 0:
-                    fullLayout = 0
+            if full_layout is None:
+                if old_layout == 0:
+                    full_layout = 64
+                elif old_layout < 0:
+                    full_layout = 0
                 else:
-                    fullLayout = (oldLayout & 31) | 128
+                    full_layout = (old_layout & 31) | 128
 
             # Some header information is stored for later, the rendering
             # engine needs to know this stuff.
             self.height = height
-            self.hardBlank = hardBlank
-            self.printDirection = printDirection
-            self.smushMode = fullLayout
+            self.hard_blank = hard_blank
+            self.print_direction = print_direction
+            self.smush_mode = full_layout
 
             # Strip out comment lines
-            for i in range(0, commentLines):
+            for i in range(0, comment_lines):
                 self.comment += data.pop(0)
 
             def __char(data):
@@ -333,7 +333,7 @@ class FigletFont(object):
                 for j in range(0, height):
                     line = data.pop(0)
                     if end is None:
-                        end = self.reEndMarker.search(line).group(1)
+                        end = self.re_end_marker.search(line).group(1)
                         end = re.compile(re.escape(end) + r"{1,2}\s*$")
 
                     line = end.sub("", line)
@@ -350,7 +350,7 @@ class FigletFont(object):
                     self.chars[i] = letter
                     self.width[i] = width
 
-            # Load German Umlaute - the follow directly after standard character 127
+            # Load German Umlaut - the follow directly after standard character 127
             for i in "ÄÖÜäöüß":
                 width, letter = __char(data)
                 if "".join(letter) != "":
@@ -431,14 +431,14 @@ class FigletString(unicode_string):
         for row in self.splitlines():
             out.append(row.translate(self.__reverse_map__)[::-1])
 
-        return self.newFromList(out)
+        return self.new_from_list(out)
 
     def flip(self):
         out = []
         for row in self.splitlines()[::-1]:
             out.append(row.translate(self.__flip_map__))
 
-        return self.newFromList(out)
+        return self.new_from_list(out)
 
     # doesn't do self.strip() because it could remove leading whitespace on first line of the font
     # doesn't do row.strip() because it could remove empty lines within the font character
@@ -452,12 +452,12 @@ class FigletString(unicode_string):
                 out.append(row)
 
         # rstrip to get rid of the trailing newlines
-        return self.newFromList(out).rstrip()
+        return self.new_from_list(out).rstrip()
 
     def normalize_surrounding_newlines(self):
         return "\n" + self.strip_surrounding_newlines() + "\n"
 
-    def newFromList(self, list):
+    def new_from_list(self, list):
         return FigletString("\n".join(list) + "\n")
 
 
@@ -482,11 +482,11 @@ class FigletRenderingEngine(object):
             self.base.justify,
         )
 
-        while builder.isNotFinished():
-            builder.addCharToProduct()
-            builder.goToNextChar()
+        while builder.is_not_finished():
+            builder.add_char_to_product()
+            builder.go_to_next_char()
 
-        return builder.returnProduct()
+        return builder.return_product()
 
 
 class FigletProduct(object):
@@ -502,7 +502,7 @@ class FigletProduct(object):
     def append(self, buffer):
         self.queue.append(buffer)
 
-    def getString(self):
+    def get_string(self):
         return FigletString(self.buffer_string)
 
 
@@ -520,14 +520,14 @@ class FigletBuilder(object):
         self.justify = justify
 
         self.iterator = 0
-        self.maxSmush = 0
+        self.max_smush = 0
         self.newBlankRegistered = False
 
-        self.curCharWidth = 0
-        self.prevCharWidth = 0
-        self.currentTotalWidth = 0
+        self.cur_char_width = 0
+        self.prev_char_width = 0
+        self.current_total_width = 0
 
-        self.blankMarkers = list()
+        self.blank_markers = list()
         self.product = FigletProduct()
         self.buffer = ["" for i in range(self.font.height)]
 
@@ -543,72 +543,72 @@ class FigletBuilder(object):
 
     # builder interface
 
-    def addCharToProduct(self):
-        curChar = self.getCurChar()
+    def add_char_to_product(self):
+        cur_char = self.get_cur_char()
 
         # if the character is a newline, we flush the buffer
         if self.text[self.iterator] == ord("\n"):
-            self.blankMarkers.append(([row for row in self.buffer], self.iterator))
-            self.handleNewLine()
+            self.blank_markers.append(([row for row in self.buffer], self.iterator))
+            self.handle_new_line()
             return None
 
-        if curChar is None:
+        if cur_char is None:
             return
-        if self.width < self.getCurWidth():
+        if self.width < self.get_cur_width():
             raise CharNotPrinted("Width is not enough to print this character")
-        self.curCharWidth = self.getCurWidth()
-        self.maxSmush = self.currentSmushAmount(curChar)
+        self.cur_char_width = self.get_cur_width()
+        self.max_smush = self.current_smush_amount(cur_char)
 
-        self.currentTotalWidth = len(self.buffer[0]) + self.curCharWidth - self.maxSmush
+        self.current_total_width = len(self.buffer[0]) + self.cur_char_width - self.max_smush
 
         if self.text[self.iterator] == ord(" "):
-            self.blankMarkers.append(([row for row in self.buffer], self.iterator))
+            self.blank_markers.append(([row for row in self.buffer], self.iterator))
 
         if self.text[self.iterator] == ord("\n"):
-            self.blankMarkers.append(([row for row in self.buffer], self.iterator))
-            self.handleNewLine()
+            self.blank_markers.append(([row for row in self.buffer], self.iterator))
+            self.handle_new_line()
 
-        if self.currentTotalWidth >= self.width:
-            self.handleNewLine()
+        if self.current_total_width >= self.width:
+            self.handle_new_line()
         else:
             for row in range(0, self.font.height):
-                self.addCurCharRowToBufferRow(curChar, row)
+                self.add_cur_char_row_to_buffer_row(cur_char, row)
 
-        self.prevCharWidth = self.curCharWidth
+        self.prev_char_width = self.cur_char_width
 
-    def goToNextChar(self):
+    def go_to_next_char(self):
         self.iterator += 1
 
-    def returnProduct(self):
+    def return_product(self):
         """
         Returns the output string created by formatProduct
         """
         if self.buffer[0] != "":
-            self.flushLastBuffer()
-        self.formatProduct()
-        return self.product.getString()
+            self.flush_last_buffer()
+        self.format_product()
+        return self.product.get_string()
 
-    def isNotFinished(self):
+    def is_not_finished(self):
         ret = self.iterator < len(self.text)
         return ret
 
     # private
 
-    def flushLastBuffer(self):
+    def flush_last_buffer(self):
         self.product.append(self.buffer)
 
-    def formatProduct(self):
+    def format_product(self):
         """
         This create the output string representation from
         the internal representation of the product
         """
         string_acc = ""
         for buffer in self.product.queue:
-            buffer = self.justifyString(self.justify, buffer)
-            string_acc += self.replaceHardblanks(buffer)
+            buffer = self.justify_string(self.justify, buffer)
+            string_acc += self.replace_hardblanks(buffer)
         self.product.buffer_string = string_acc
 
-    def getCharAt(self, i):
+    def get_char_at(self, i):
         if i < 0 or i >= len(list(self.text)):
             return None
         c = self.text[i]
@@ -618,7 +618,7 @@ class FigletBuilder(object):
         else:
             return self.font.chars[c]
 
-    def getCharWidthAt(self, i):
+    def get_char_width_at(self, i):
         if i < 0 or i >= len(self.text):
             return None
         c = self.text[i]
@@ -627,87 +627,87 @@ class FigletBuilder(object):
         else:
             return self.font.width[c]
 
-    def getCurChar(self):
-        return self.getCharAt(self.iterator)
+    def get_cur_char(self):
+        return self.get_char_at(self.iterator)
 
-    def getCurWidth(self):
-        return self.getCharWidthAt(self.iterator)
+    def get_cur_width(self):
+        return self.get_char_width_at(self.iterator)
 
-    def getLeftSmushedChar(self, i, addLeft):
-        idx = len(addLeft) - self.maxSmush + i
-        if idx >= 0 and idx < len(addLeft):
-            left = addLeft[idx]
+    def get_left_smushed_char(self, i, add_left):
+        idx = len(add_left) - self.max_smush + i
+        if 0 <= idx < len(add_left):
+            left = add_left[idx]
         else:
             left = ""
         return left, idx
 
-    def currentSmushAmount(self, curChar):
-        return self.smushAmount(self.buffer, curChar)
+    def current_smush_amount(self, cur_char):
+        return self.smush_amount(self.buffer, cur_char)
 
-    def updateSmushedCharInLeftBuffer(self, addLeft, idx, smushed):
-        l = list(addLeft)
+    def update_smushed_char_in_left_buffer(self, add_left, idx, smushed):
+        l = list(add_left)
         if idx < 0 or idx > len(l):
-            return addLeft
+            return add_left
         l[idx] = smushed
-        addLeft = "".join(l)
-        return addLeft
+        add_left = "".join(l)
+        return add_left
 
-    def smushRow(self, curChar, row):
-        addLeft = self.buffer[row]
-        addRight = curChar[row]
+    def smush_row(self, cur_char, row):
+        add_left = self.buffer[row]
+        add_right = cur_char[row]
 
         if self.direction == "right-to-left":
-            addLeft, addRight = addRight, addLeft
+            add_left, add_right = add_right, add_left
 
-        for i in range(0, self.maxSmush):
-            left, idx = self.getLeftSmushedChar(i, addLeft)
-            right = addRight[i]
-            smushed = self.smushChars(left=left, right=right)
-            addLeft = self.updateSmushedCharInLeftBuffer(addLeft, idx, smushed)
-        return addLeft, addRight
+        for i in range(0, self.max_smush):
+            left, idx = self.get_left_smushed_char(i, add_left)
+            right = add_right[i]
+            smushed = self.smush_chars(left=left, right=right)
+            add_left = self.update_smushed_char_in_left_buffer(add_left, idx, smushed)
+        return add_left, add_right
 
-    def addCurCharRowToBufferRow(self, curChar, row):
-        addLeft, addRight = self.smushRow(curChar, row)
-        self.buffer[row] = addLeft + addRight[self.maxSmush :]
+    def add_cur_char_row_to_buffer_row(self, cur_char, row):
+        add_left, add_right = self.smush_row(cur_char, row)
+        self.buffer[row] = add_left + add_right[self.max_smush:]
 
-    def cutBufferCommon(self):
-        self.currentTotalWidth = len(self.buffer[0])
+    def cut_buffer_common(self):
+        self.current_total_width = len(self.buffer[0])
         self.buffer = ["" for i in range(self.font.height)]
-        self.blankMarkers = list()
-        self.prevCharWidth = 0
-        curChar = self.getCurChar()
-        if curChar is None:
+        self.blank_markers = list()
+        self.prev_char_width = 0
+        cur_char = self.get_cur_char()
+        if cur_char is None:
             return
-        self.maxSmush = self.currentSmushAmount(curChar)
+        self.max_smush = self.current_smush_amount(cur_char)
 
-    def cutBufferAtLastBlank(self, saved_buffer, saved_iterator):
+    def cut_buffer_at_last_blank(self, saved_buffer, saved_iterator):
         self.product.append(saved_buffer)
         self.iterator = saved_iterator
-        self.cutBufferCommon()
+        self.cut_buffer_common()
 
-    def cutBufferAtLastChar(self):
+    def cut_buffer_at_last_char(self):
         self.product.append(self.buffer)
         self.iterator -= 1
-        self.cutBufferCommon()
+        self.cut_buffer_common()
 
-    def blankExist(self, last_blank):
+    def blank_exist(self, last_blank):
         return last_blank != -1
 
-    def getLastBlank(self):
+    def get_last_blank(self):
         try:
-            saved_buffer, saved_iterator = self.blankMarkers.pop()
+            saved_buffer, saved_iterator = self.blank_markers.pop()
         except IndexError:
             return -1, -1
         return (saved_buffer, saved_iterator)
 
-    def handleNewLine(self):
-        saved_buffer, saved_iterator = self.getLastBlank()
-        if self.blankExist(saved_iterator):
-            self.cutBufferAtLastBlank(saved_buffer, saved_iterator)
+    def handle_new_line(self):
+        saved_buffer, saved_iterator = self.get_last_blank()
+        if self.blank_exist(saved_iterator):
+            self.cut_buffer_at_last_blank(saved_buffer, saved_iterator)
         else:
-            self.cutBufferAtLastChar()
+            self.cut_buffer_at_last_char()
 
-    def justifyString(self, justify, buffer):
+    def justify_string(self, justify, buffer):
         if justify == "right":
             for row in range(0, self.font.height):
                 buffer[row] = (" " * (self.width - len(buffer[row]) - 1)) + buffer[row]
@@ -718,12 +718,12 @@ class FigletBuilder(object):
                 ]
         return buffer
 
-    def replaceHardblanks(self, buffer):
+    def replace_hardblanks(self, buffer):
         string = "\n".join(buffer) + "\n"
-        string = string.replace(self.font.hardBlank, " ")
+        string = string.replace(self.font.hard_blank, " ")
         return string
 
-    def smushAmount(self, buffer=[], curChar=[]):
+    def smush_amount(self, buffer=[], cur_char=[]):
         """
         Calculate the amount of smushing we can do between this char and the
         last If this is the first char it will throw a series of exceptions
@@ -732,71 +732,71 @@ class FigletBuilder(object):
         This differs from C figlet which will just get bogus values from
         memory and then discard them after.
         """
-        if (self.font.smushMode & (self.SM_SMUSH | self.SM_KERN)) == 0:
+        if (self.font.smush_mode & (self.SM_SMUSH | self.SM_KERN)) == 0:
             return 0
 
-        maxSmush = self.curCharWidth
+        max_smush = self.cur_char_width
         for row in range(0, self.font.height):
-            lineLeft = buffer[row]
-            lineRight = curChar[row]
+            line_left = buffer[row]
+            line_right = cur_char[row]
             if self.direction == "right-to-left":
-                lineLeft, lineRight = lineRight, lineLeft
+                line_left, line_right = line_right, line_left
 
-            linebd = len(lineLeft.rstrip()) - 1
+            linebd = len(line_left.rstrip()) - 1
             if linebd < 0:
                 linebd = 0
 
-            if linebd < len(lineLeft):
-                ch1 = lineLeft[linebd]
+            if linebd < len(line_left):
+                ch1 = line_left[linebd]
             else:
                 linebd = 0
                 ch1 = ""
 
-            charbd = len(lineRight) - len(lineRight.lstrip())
-            if charbd < len(lineRight):
-                ch2 = lineRight[charbd]
+            charbd = len(line_right) - len(line_right.lstrip())
+            if charbd < len(line_right):
+                ch2 = line_right[charbd]
             else:
-                charbd = len(lineRight)
+                charbd = len(line_right)
                 ch2 = ""
 
-            amt = charbd + len(lineLeft) - 1 - linebd
+            amt = charbd + len(line_left) - 1 - linebd
 
             if ch1 == "" or ch1 == " ":
                 amt += 1
-            elif ch2 != "" and self.smushChars(left=ch1, right=ch2) is not None:
+            elif ch2 != "" and self.smush_chars(left=ch1, right=ch2) is not None:
                 amt += 1
 
-            if amt < maxSmush:
-                maxSmush = amt
+            if amt < max_smush:
+                max_smush = amt
 
-        return maxSmush
+        return max_smush
 
-    def smushChars(self, left="", right=""):
+    def smush_chars(self, left="", right=""):
         """
         Given 2 characters which represent the edges rendered figlet
         fonts where they would touch, see if they can be smushed together.
         Returns None if this cannot or should not be done.
         """
-        if left.isspace() is True:
+        if left.isspace():
             return right
-        if right.isspace() is True:
+        if right.isspace():
             return left
 
         # Disallows overlapping if previous or current char has a width of 1 or
         # zero
-        if (self.prevCharWidth < 2) or (self.curCharWidth < 2):
+        if (self.prev_char_width < 2) or (self.cur_char_width < 2):
             return
 
         # kerning only
-        if (self.font.smushMode & self.SM_SMUSH) == 0:
+        if (self.font.smush_mode & self.SM_SMUSH) == 0:
             return
 
         # smushing by universal overlapping
-        if (self.font.smushMode & 63) == 0:
-            # Ensure preference to visiable characters.
-            if left == self.font.hardBlank:
+        if (self.font.smush_mode & 63) == 0:
+            # Ensure preference to visible characters.
+            if left == self.font.hard_blank:
                 return right
-            if right == self.font.hardBlank:
+            if right == self.font.hard_blank:
                 return left
 
             # Ensures that the dominant (foreground)
@@ -807,23 +807,23 @@ class FigletBuilder(object):
             else:
                 return right
 
-        if self.font.smushMode & self.SM_HARDBLANK:
-            if left == self.font.hardBlank and right == self.font.hardBlank:
+        if self.font.smush_mode & self.SM_HARDBLANK:
+            if left == self.font.hard_blank and right == self.font.hard_blank:
                 return left
 
-        if left == self.font.hardBlank or right == self.font.hardBlank:
+        if left == self.font.hard_blank or right == self.font.hard_blank:
             return
 
-        if self.font.smushMode & self.SM_EQUAL:
+        if self.font.smush_mode & self.SM_EQUAL:
             if left == right:
                 return left
 
         smushes = ()
 
-        if self.font.smushMode & self.SM_LOWLINE:
+        if self.font.smush_mode & self.SM_LOWLINE:
             smushes += (("_", r"|/\[]{}()<>"),)
 
-        if self.font.smushMode & self.SM_HIERARCHY:
+        if self.font.smush_mode & self.SM_HIERARCHY:
             smushes += (
                 ("|", r"|/\[]{}()<>"),
                 (r"\/", "[]{}()<>"),
@@ -838,12 +838,12 @@ class FigletBuilder(object):
             if right in a and left in b:
                 return left
 
-        if self.font.smushMode & self.SM_PAIR:
+        if self.font.smush_mode & self.SM_PAIR:
             for pair in [left + right, right + left]:
                 if pair in ["[]", "{}", "()"]:
                     return "|"
 
-        if self.font.smushMode & self.SM_BIGX:
+        if self.font.smush_mode & self.SM_BIGX:
             if (left == "/") and (right == "\\"):
                 return "|"
             if (right == "/") and (left == "\\"):
@@ -863,18 +863,18 @@ class Figlet(object):
         self._direction = direction
         self._justify = justify
         self.width = width
-        self.setFont()
+        self.set_font()
         self.engine = FigletRenderingEngine(base=self)
 
-    def setFont(self, **kwargs):
+    def set_font(self, **kwargs):
         if "font" in kwargs:
             self.font = kwargs["font"]
 
         self.Font = FigletFont(font=self.font)
 
-    def getDirection(self):
+    def get_direction(self):
         if self._direction == "auto":
-            direction = self.Font.printDirection
+            direction = self.Font.print_direction
             if direction == 0:
                 return "left-to-right"
             elif direction == 1:
@@ -885,9 +885,9 @@ class Figlet(object):
         else:
             return self._direction
 
-    direction = property(getDirection)
+    direction = property(get_direction)
 
-    def getJustify(self):
+    def get_justify(self):
         if self._justify == "auto":
             if self.direction == "left-to-right":
                 return "left"
@@ -897,17 +897,17 @@ class Figlet(object):
         else:
             return self._justify
 
-    justify = property(getJustify)
+    justify = property(get_justify)
 
-    def renderText(self, text):
+    def render_text(self, text):
         # wrapper method to engine
         return self.engine.render(text)
 
-    def getFonts(self):
-        return self.Font.getFonts()
+    def get_fonts(self):
+        return self.Font.get_fonts()
 
 
-def color_to_ansi(color, isBackground):
+def color_to_ansi(color, is_background):
     if not color:
         return ""
     color = color.upper()
@@ -919,21 +919,19 @@ def color_to_ansi(color, isBackground):
         )
 
     if color in COLOR_CODES:
-        ansiCode = COLOR_CODES[color]
-        if isBackground:
-            ansiCode += 10
+        ansi_code = COLOR_CODES[color]
+        if is_background:
+            ansi_code += 10
     else:
-        ansiCode = 48 if isBackground else 38
-        ansiCode = "{};2;{}".format(ansiCode, color)
+        ansi_code = 48 if is_background else 38
+        ansi_code = "{};2;{}".format(ansi_code, color)
 
-    return "\033[{}m".format(ansiCode)
+    return "\033[{}m".format(ansi_code)
 
 
 def parse_color(color):
     foreground, _, background = color.partition(":")
-    ansiForeground = color_to_ansi(foreground, isBackground=False)
-    ansiBackground = color_to_ansi(background, isBackground=True)
-    return ansiForeground + ansiBackground
+    return color_to_ansi(foreground, is_background=False) + color_to_ansi(background, is_background=True)
 
 
 def main():
@@ -1033,7 +1031,7 @@ def main():
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
-        print("\n".join(sorted(FigletFont.getFonts())))
+        print("\n".join(sorted(FigletFont.get_fonts())))
         exit(0)
 
     if opts.color == "list":
@@ -1043,11 +1041,11 @@ def main():
         exit(0)
 
     if opts.info_font:
-        print(FigletFont.infoFont(opts.font))
+        print(FigletFont.info_font(opts.font))
         exit(0)
 
     if opts.load:
-        FigletFont.installFonts(opts.load)
+        FigletFont.install_fonts(opts.load)
         exit(0)
 
     if len(args) == 0:
@@ -1066,7 +1064,7 @@ def main():
         width=opts.width,
     )
 
-    r = f.renderText(text)
+    r = f.render_text(text)
     if opts.reverse:
         r = r.reverse()
     if opts.flip:

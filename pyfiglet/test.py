@@ -83,9 +83,9 @@ class Test(object):
             return
         fontpath = os.path.join('pyfiglet', 'fonts', font)
 
-        self.f.setFont(font=font)
+        self.f.set_font(font=font)
 
-        outputPyfiglet = self.f.renderText(text)
+        outputPyfiglet = self.f.render_text(text)
         outputFiglet = self.outputUsingFigletorToilet(text, font, fontpath)
 
         # Our TLF rendering isn't perfect, yet
@@ -98,7 +98,7 @@ class Test(object):
 
 
     def check_text(self, text):
-        for font in self.f.getFonts():
+        for font in self.f.get_fonts():
             self.check_font(text, font)
 
     def check_result(self):
@@ -109,7 +109,7 @@ class Test(object):
         return self.failed, self.oked
 
 def banner(text):
-    cprint(Figlet().renderText(text), "blue")
+    cprint(Figlet().render_text(text), "blue")
 
 def main():
     parser = OptionParser(version=__version__)
