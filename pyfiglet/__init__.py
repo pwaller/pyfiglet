@@ -185,6 +185,8 @@ class FigletFont(object):
                 zip_font = zip_file.open(zip_file.namelist()[0])
                 header = zip_font.readline().decode('UTF-8', 'replace')
         else:
+            # ZIP file check moves the current file pointer - reset to start of file.
+            f.seek(0)
             header = f.readline().decode('UTF-8', 'replace')
 
         f.close()
