@@ -7,8 +7,10 @@ Python FIGlet adaption
 
 from __future__ import print_function, unicode_literals
 
+import itertools
+import importlib.resources
 import os
-import pkg_resources
+import pathlib
 import re
 import shutil
 import sys
@@ -136,8 +138,9 @@ class FigletFont(object):
         f = None
         for extension in ('tlf', 'flf'):
             fn = '%s.%s' % (font, extension)
-            if pkg_resources.resource_exists('pyfiglet.fonts', fn):
-                f = pkg_resources.resource_stream('pyfiglet.fonts', fn)
+            path = importlib.resources.files('pyfiglet.fonts').joinpath(fn)
+            if path.exists():
+                f = path.open('rb')
                 break
             else:
                 for location in ("./", SHARED_DIRECTORY):
@@ -174,7 +177,7 @@ class FigletFont(object):
         elif os.path.isfile(full_file):
             f = open(full_file, 'rb')
         else:
-            f = pkg_resources.resource_stream('pyfiglet.fonts', font)
+            f = importlib.resources.files('pyfiglet.fonts').joinpath(font).open('rb')
 
         if zipfile.is_zipfile(f):
             # If we have a match, the ZIP file spec says we should just read the first file in the ZIP.
@@ -190,12 +193,12 @@ class FigletFont(object):
 
     @classmethod
     def getFonts(cls):
-        all_files = pkg_resources.resource_listdir('pyfiglet', 'fonts')
+        all_files = importlib.resources.files('pyfiglet.fonts').iterdir()
         if os.path.isdir(SHARED_DIRECTORY):
-             all_files += os.listdir(SHARED_DIRECTORY)
-        return [font.rsplit('.', 2)[0] for font
+             all_files = itertools.chain(all_files, pathlib.Path(SHARED_DIRECTORY).iterdir())
+        return [font.stem for font
                 in all_files
-                if cls.isValidFont(font)]
+                if font.is_file() and cls.isValidFont(font.name)]
 
     @classmethod
     def infoFont(cls, font, short=False):
@@ -223,12 +226,12 @@ class FigletFont(object):
         """
         Install the specified font file to this system.
         """
-        if isinstance(pkg_resources.get_provider('pyfiglet'), pkg_resources.ZipProvider):
+        if hasattr(importlib.resources.files('pyfiglet'), 'resolve'):
+            # Figlet looks like a standard directory - so lets use that to install new fonts.
+            location = str(importlib.resources.files('pyfiglet.fonts'))
+        else:
             # Figlet is installed using a zipped resource - don't try to upload to it.
             location = SHARED_DIRECTORY
-        else:
-            # Figlet looks like a standard directory - so lets use that to install new fonts.
-            location = pkg_resources.resource_filename('pyfiglet', 'fonts')
 
         print("Installing {} to {}".format(file_name, location))
 
