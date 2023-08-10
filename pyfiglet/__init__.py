@@ -196,7 +196,7 @@ class FigletFont(object):
         all_files = importlib.resources.files('pyfiglet.fonts').iterdir()
         if os.path.isdir(SHARED_DIRECTORY):
              all_files = itertools.chain(all_files, pathlib.Path(SHARED_DIRECTORY).iterdir())
-        return [font.stem for font
+        return [font.name.split('.', 2)[0] for font
                 in all_files
                 if font.is_file() and cls.isValidFont(font.name)]
 
