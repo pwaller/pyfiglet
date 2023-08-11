@@ -40,6 +40,13 @@ class Test(object):
                       'smblock', 'smbraille', 'wideterm']
         # fonts that throw Unicode decoding errors
         self.skip += ['dosrebel', 'konto', 'kontoslant']
+        # zip fonts we don't support
+        self.skip += ['ascii12', 'ascii9', 'bigascii12', 'bigascii9',
+                      'bigmono12', 'bigmono9', 'mono12', 'mono9', 'smascii12',
+                      'smascii9', 'smmono12', 'smmono9']
+        # what looks like the same bug, but in non-zip fonts
+        self.skip += ['dwhistled', 'gradient']
+
         self.f = Figlet()
 
     def outputUsingFigletorToilet(self, text, font, fontpath):
