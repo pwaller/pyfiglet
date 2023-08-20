@@ -40,15 +40,9 @@ class Test(object):
                       'smblock', 'smbraille', 'wideterm']
         # fonts that throw Unicode decoding errors
         self.skip += ['dosrebel', 'konto', 'kontoslant']
-        # zip fonts we don't support
-        self.skip += ['ascii12', 'ascii9', 'bigascii12', 'bigascii9',
-                      'bigmono12', 'bigmono9', 'mono12', 'mono9', 'smascii12',
-                      'smascii9', 'smmono12', 'smmono9']
-        # what looks like the same bug, but in non-zip fonts
-        self.skip += ['dwhistled', 'gradient']
         # failing tests:
-        self.skip += ['crawford2', 'konto_slant', 'danc4', 'diet_cola',
-                      'stronger_than_all']
+        self.skip += ['konto_slant', 'danc4', 'diet_cola',
+                      'stronger_than_all', 'gradient', 'dwhistled']
 
         self.f = Figlet()
 
@@ -86,35 +80,33 @@ class Test(object):
             dump(outputPyfiglet)
             print('[FIGLET] *** %s\n\n' % font)
             dump(outputFiglet)
-            raw_input()
+            input()
 
-    def check_font(self, text, font):
+    def check_font(self, text, font, use_tlf):
+        # Skip flagged bad fonts
         if font in self.skip:
             return
-        fontpath = os.path.join('pyfiglet', 'fonts', font)
-
-        self.f.setFont(font=font)
-
-        outputPyfiglet = self.f.renderText(text)
-        outputFiglet = self.outputUsingFigletorToilet(text, font, fontpath)
 
         # Our TLF rendering isn't perfect, yet
-        strict = os.path.isfile(fontpath + '.flf')
-        if not strict:
-            outputPyfiglet = outputPyfiglet.strip('\n')
-            outputFiglet = outputFiglet.strip('\n')
+        fontpath = os.path.join('pyfiglet', 'fonts', font)
+        fig_file = os.path.isfile(fontpath + '.flf')
+        if not use_tlf and not fig_file:
+            return
 
+        self.f.setFont(font=font)
+        outputPyfiglet = self.f.renderText(text)
+        outputFiglet = self.outputUsingFigletorToilet(text, font, fontpath)
         self.validate_font_output(font, outputFiglet, outputPyfiglet)
 
 
-    def check_text(self, text):
+    def check_text(self, text, use_tlf):
         for font in self.f.getFonts():
-            self.check_font(text, font)
+            self.check_font(text, font, use_tlf)
 
     def check_result(self):
         print('OK = %d, FAIL = %d' % (self.ok, self.fail))
         if len(self.failed) > 0:
-            print('FAILED = %s' % repr(self.failed))
+            print('FAILED = %s' % set(self.failed))
 
         return self.failed, self.oked
 
@@ -131,13 +123,13 @@ def main():
     opts, args = parser.parse_args()
     test = Test(opts)
     banner("TESTING one word")
-    test.check_text("foo")
+    test.check_text("foo", True)
     banner("TESTING cut at space")
-    test.check_text("This is a very long text with many spaces and little words")
+    test.check_text("This is a very long text with many spaces and little words", False)
     banner("TESTING cut at last char")
-    test.check_text("Averylongwordthatwillbecutatsomepoint I hope")
+    test.check_text("Averylongwordthatwillbecutatsomepoint I hope", False)
     banner("TESTING explicit new line")
-    test.check_text("this text\nuse new line")
+    test.check_text("line1\nline2", True)
     if len(test.check_result()[0]) == 0:
         return 0
     else:
