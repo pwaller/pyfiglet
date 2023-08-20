@@ -260,8 +260,12 @@ class FigletFont(object):
         Parse loaded font data for the rendering engine to consume
         """
         try:
+            # Remove any unicode line splitting characters other
+            # than CRLF - to match figlet line parsing
+            data = re.sub(r"[\u0085\u2028\u2029]", " ", self.data)
+
             # Parse first line of file, the header
-            data = self.data.splitlines()
+            data = data.splitlines()
 
             header = data.pop(0)
             if self.reMagicNumber.search(header) is None:
@@ -336,10 +340,11 @@ class FigletFont(object):
             # Load German Umlaute - the follow directly after standard character 127
             if data:
                 for i in 'ÄÖÜäöüß':
-                    width, letter = __char(data)
-                    if ''.join(letter) != '':
-                        self.chars[ord(i)] = letter
-                        self.width[ord(i)] = width
+                    if data:
+                        width, letter = __char(data)
+                        if ''.join(letter) != '':
+                            self.chars[ord(i)] = letter
+                            self.width[ord(i)] = width
 
             # Load ASCII extended character set
             while data:
@@ -808,7 +813,7 @@ class FigletBuilder(object):
 
         if self.font.smushMode & self.SM_HIERARCHY:
             smushes += (
-                ('|', r'|/\[]{}()<>'),
+                ('|', r'/\[]{}()<>'),
                 (r'\/', '[]{}()<>'),
                 ('[]', '{}()<>'),
                 ('{}', '()<>'),
