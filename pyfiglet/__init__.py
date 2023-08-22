@@ -340,11 +340,10 @@ class FigletFont(object):
             # Load German Umlaute - the follow directly after standard character 127
             if data:
                 for i in 'ÄÖÜäöüß':
-                    if data:
-                        width, letter = __char(data)
-                        if ''.join(letter) != '':
-                            self.chars[ord(i)] = letter
-                            self.width[ord(i)] = width
+                    width, letter = __char(data)
+                    if ''.join(letter) != '':
+                        self.chars[ord(i)] = letter
+                        self.width[ord(i)] = width
 
             # Load ASCII extended character set
             while data:
