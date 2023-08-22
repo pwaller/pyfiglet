@@ -34,15 +34,8 @@ class Test(object):
         self.failed = []
         self.oked = []
         # known bugs...
-        self.skip = ['runic', 'pyramid', 'eftifont', 'DANC4', 'dietcola']
-        # Toilet fonts that we don't handle identically, yet
-        self.skip += ['emboss', 'emboss2', 'future', 'letter', 'pagga',
-                      'smblock', 'smbraille', 'wideterm']
-        # fonts that throw Unicode decoding errors
-        self.skip += ['dosrebel', 'konto', 'kontoslant']
-        # failing tests:
-        self.skip += ['konto_slant', 'danc4', 'diet_cola',
-                      'stronger_than_all', 'gradient', 'dwhistled']
+        self.skip = ['pyramid', 'konto', 'konto_slant', 'danc4', 'diet_cola',
+                      'stronger_than_all']
 
         self.f = Figlet()
 
