@@ -2,7 +2,15 @@
 
 from setuptools import setup
 import sys
+from os import path
+import shutil
 
+# Set up minimum fonts if none already present
+here = path.abspath(path.dirname(__file__))
+pkg_src = path.join(here, 'pyfiglet', 'fonts')
+repo_src = path.join(here, 'pyfiglet', 'fonts-standard')
+if not path.isdir(pkg_src):
+    shutil.copytree(repo_src, pkg_src)
 
 def get_version():
     sys.path.insert(0, 'pyfiglet')
