@@ -34,8 +34,7 @@ class Test(object):
         self.failed = []
         self.oked = []
         # known bugs...
-        self.skip = ['pyramid', 'konto', 'konto_slant', 'danc4', 'diet_cola',
-                      'stronger_than_all']
+        self.skip = ['pyramid', 'konto', 'konto_slant', 'danc4', 'diet_cola']
 
         self.f = Figlet()
 
