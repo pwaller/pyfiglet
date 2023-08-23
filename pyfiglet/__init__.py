@@ -726,7 +726,8 @@ class FigletBuilder(object):
             if self.direction == 'right-to-left':
                 lineLeft, lineRight = lineRight, lineLeft
 
-            linebd = len(lineLeft.rstrip()) - 1
+            # Only strip ascii space to match figlet exactly.
+            linebd = len(lineLeft.rstrip(' ')) - 1
             if linebd < 0:
                 linebd = 0
 
@@ -736,7 +737,8 @@ class FigletBuilder(object):
                 linebd = 0
                 ch1 = ''
 
-            charbd = len(lineRight) - len(lineRight.lstrip())
+            # Only strip ascii space to match figlet exactly.
+            charbd = len(lineRight) - len(lineRight.lstrip(' '))
             if charbd < len(lineRight):
                 ch2 = lineRight[charbd]
             else:
@@ -762,9 +764,11 @@ class FigletBuilder(object):
         fonts where they would touch, see if they can be smushed together.
         Returns None if this cannot or should not be done.
         """
-        if left.isspace() is True:
+        # Don't use isspace because this also matches unicode chars that figlet
+        # treats as hard breaks
+        if left == ' ':
             return right
-        if right.isspace() is True:
+        if right == ' ':
             return left
 
         # Disallows overlapping if previous or current char has a width of 1 or
