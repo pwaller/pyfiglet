@@ -330,10 +330,13 @@ class FigletFont(object):
                     chars.append(line)
                 return width, chars
 
-            # Load ASCII standard character set (32 - 127)
+            # Load ASCII standard character set (32 - 127).
+            # Don't skip space definition as later rendering pipeline will
+            # ignore all missing chars and space is critical for the line
+            # breaking logic.
             for i in range(32, 127):
                 width, letter = __char(data)
-                if ''.join(letter) != '':
+                if i == 32 or ''.join(letter) != '':
                     self.chars[i] = letter
                     self.width[i] = width
 
@@ -653,7 +656,7 @@ class FigletBuilder(object):
         self.buffer[row] = addLeft + addRight[self.maxSmush:]
 
     def cutBufferCommon(self):
-        self.currentTotalWidth = len(self.buffer[0])
+        self.currentTotalWidth = 0
         self.buffer = ['' for i in range(self.font.height)]
         self.blankMarkers = list()
         self.prevCharWidth = 0

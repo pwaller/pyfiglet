@@ -1,4 +1,4 @@
-flf2a 3 3 7 -1 16
+flf2a 3 3 7 -1 16
 Pyramid by Claude Martins 02/95
 Includes characters 128-255
 figlet release 2.1 -- 12 Aug 1994
@@ -15,9 +15,9 @@ $    - the "hardblank" -- prints as a blank, but can't be smushed
 -1   - default smushmode for this font
 16   - number of comment lines
 
-@
-@
-@@
+@
+@
+@@
   ^  @
  /!\ @
 <___>@@
