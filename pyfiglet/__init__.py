@@ -995,10 +995,14 @@ def main():
 
     text = ' '.join(args)
 
-    f = Figlet(
-        font=opts.font, direction=opts.direction,
-        justify=opts.justify, width=opts.width,
-    )
+    try:
+        f = Figlet(
+            font=opts.font, direction=opts.direction,
+            justify=opts.justify, width=opts.width,
+        )
+    except FontNotFound as err:
+        print(f"pyfiglet error: requested font {opts.font!r} not found.")
+        return 1
 
     r = f.renderText(text)
     if opts.reverse:
