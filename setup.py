@@ -22,6 +22,8 @@ setup(
     name='pyfiglet',
     version=get_version(),
     description='Pure-python FIGlet implementation',
+    long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     license='MIT',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

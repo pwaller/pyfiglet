@@ -11,12 +11,13 @@ clean:
 
 minimal:    clean
 	cp pyfiglet/fonts-standard/* pyfiglet/fonts
-	python setup.py sdist bdist_wheel
+	python3 -m build
 
 full:    clean
 	cp pyfiglet/fonts-standard/* pyfiglet/fonts
 	cp pyfiglet/fonts-contrib/* pyfiglet/fonts
-	python setup.py sdist bdist_wheel
+	python3 -m build
 
 publish:
-	python setup.py upload
+	python3 -m twine check dist/*
+	python3 -m twine upload dist/*
