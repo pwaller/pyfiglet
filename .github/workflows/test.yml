@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -35,3 +35,27 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -vv
+
+  pypi-publish:
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    name: Upload release to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: publish
+      url: https://pypi.org/p/pyfiglet
+    permissions:
+      id-token: write
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: pip
+    - name: Build full dist
+      run: |
+        python -m pip install --upgrade pip
+        make full
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
