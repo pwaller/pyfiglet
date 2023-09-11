@@ -1,7 +1,7 @@
 import os
+import subprocess
 
 import pytest
-import subprocess32
 
 
 @pytest.fixture
@@ -30,14 +30,14 @@ def test_strip():
    00:::::::::00   
      000000000
 '''
-    result = subprocess32.run(command, shell=True, stdout=subprocess32.PIPE)
+    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
     assert result.stdout.decode() == expected
     assert result.returncode == 0
 
 
 def test_strip_strange_font(test_font_dir):
     install_command = "pyfiglet -L %s/TEST_ONLY.flf " % test_font_dir
-    subprocess32.run(install_command, shell=True, check=True)
+    subprocess.run(install_command, shell=True, check=True)
 
     command = "pyfiglet -f TEST_ONLY -s 0"
     expected = '''\
@@ -51,7 +51,7 @@ def test_strip_strange_font(test_font_dir):
             
 0000000000
 '''
-    result = subprocess32.run(command, shell=True, stdout=subprocess32.PIPE)
+    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
     assert result.stdout.decode() == expected
     assert result.returncode == 0
 
@@ -79,6 +79,6 @@ def test_normalize():
      000000000
 
 '''
-    result = subprocess32.run(command, shell=True, stdout=subprocess32.PIPE)
+    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
     assert result.stdout.decode() == expected
     assert result.returncode == 0
