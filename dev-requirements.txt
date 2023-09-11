@@ -1,4 +1,3 @@
 build
 pytest
-subprocess32
 wheel
