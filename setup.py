@@ -20,6 +20,7 @@ def get_version():
 
 setup(
     name='pyfiglet',
+    python_requires=">=3.9",
     version=get_version(),
     description='Pure-python FIGlet implementation',
     long_description=open("README.md").read(),
