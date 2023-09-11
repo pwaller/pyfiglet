@@ -1,4 +1,14 @@
-# 2023-09-10 1.0.0
+# 2023-09-10 1.0.1
+
+  This release adds a python_requires >= 3.9 to setup.py to prevent old python
+  versions from picking up the newly incompatible version.
+
+# 2023-09-10 1.0.0 [yanked]
+
+  This release was yanked, because it introduced incompatibilities with old
+  versions of python but did not specify a python_requires line.
+
+  To prevent
 
   * Support for Python 2 was dropped
   * Support for compressed fonts
