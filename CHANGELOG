@@ -1,3 +1,7 @@
+# 2023-09-13 1.0.2
+
+  This release fixes a leaked file descriptor.
+
 # 2023-09-10 1.0.1
 
   This release adds a python_requires >= 3.9 to setup.py to prevent old python
