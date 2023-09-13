@@ -135,30 +135,31 @@ class FigletFont(object):
         """
         # Find a plausible looking font file.
         data = None
-        f = None
+        font_path = None
         for extension in ('tlf', 'flf'):
             fn = '%s.%s' % (font, extension)
             path = importlib.resources.files('pyfiglet.fonts').joinpath(fn)
             if path.exists():
-                f = path.open('rb')
+                font_path = path
                 break
             else:
                 for location in ("./", SHARED_DIRECTORY):
                     full_name = os.path.join(location, fn)
                     if os.path.isfile(full_name):
-                        f = open(full_name, 'rb')
+                        font_path = pathlib.Path(full_name)
                         break
 
         # Unzip the first file if this file/stream looks like a ZIP file.
-        if f:
-            if zipfile.is_zipfile(f):
-                with zipfile.ZipFile(f) as zip_file:
-                    zip_font = zip_file.open(zip_file.namelist()[0])
-                    data = zip_font.read()
-            else:
-                # ZIP file check moves the current file pointer - reset to start of file.
-                f.seek(0)
-                data = f.read()
+        if font_path:
+            with font_path.open('rb') as f:
+                if zipfile.is_zipfile(f):
+                    with zipfile.ZipFile(f) as zip_file:
+                        zip_font = zip_file.open(zip_file.namelist()[0])
+                        data = zip_font.read()
+                else:
+                    # ZIP file check moves the current file pointer - reset to start of file.
+                    f.seek(0)
+                    data = f.read()
 
         # Return the decoded data (if any).
         if data:
