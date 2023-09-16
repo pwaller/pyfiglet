@@ -20,7 +20,8 @@ the title above, which is the 'block' font).
 
 - **Q**: Why? WHY?!!
 
-  **A**: I was bored. Really bored.
+  **A**: I [cjones] was bored. Really bored.
+  
 - **Q**: What the hell does this do that FIGlet doesn't?
 
   **A**: Not much, except allow your font collection to live
@@ -33,9 +34,11 @@ the title above, which is the 'block' font).
 
   **A**: Yes, yes it does. Output should be identical to FIGlet. If
            not, this is a bug, which you should report to me!
+  
 - **Q**: Can I use/modify/redstribute this code?
 
   **A**: Yes, under the terms of the MIT (see LICENSE below).
+  
 - **Q**: I improved this code, what should I do with it?
 
   **A**: You can submit changes to https://github.com/pwaller/pyfiglet/pulls.
@@ -52,14 +55,16 @@ the title above, which is the 'block' font).
            should give you what you need.  However, if you are looking for the
            specific removed fonts, please go to http://www.jave.de/figlet/fonts.html.
 
-- **Q** Why are some fonts missing in <my favourite> distribution?
-  **A** Some Linux distributions have very strict legal restrictions on what
+- **Q**: Why are some fonts missing in <my favourite> distribution?
+  
+  **A**: Some Linux distributions have very strict legal restrictions on what
            contributions they will take.  For these systems, we have divided the
            fonts into ones that have a clear redistribution license and those that
            don't.  These are the fonts-standard and fonts-contrib directories in
            this repository.
-- **Q** What about those other fonts?
-  **A** While there isn't a watertight case for the license, we believe that
+- **Q**: What about those other fonts?
+  
+  **A**: While there isn't a watertight case for the license, we believe that
            any legal constraint for these fonts has long expired and so they
            are public domain, so are continuing to redistribute via pypi.  If
            an owner of any of these fonts wants us to stop, please just
@@ -143,3 +148,7 @@ Peter Waller <p@pwaller.net>
 And various contributors (see git history).
 ```
 (see LICENSE for full details)
+
+# Packaging status
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/python:pyfiglet.svg)](https://repology.org/project/python:pyfiglet/versions)
