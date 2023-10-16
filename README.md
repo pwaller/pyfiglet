@@ -43,7 +43,7 @@ the title above, which is the 'block' font).
 
   **A**: You can submit changes to https://github.com/pwaller/pyfiglet/pulls.
            If you make changes to the kerning/mushing/rendering portion, PLEASE
-           test it throroughly. The code is fragile and complex.
+           test it thoroughly. The code is fragile and complex.
 - **Q**: Where did my font go?
 
   **A**: It turns out that we didn't have distribution rights for some of the
@@ -108,7 +108,7 @@ root access to install the font - e.g. `sudo pyfiglet -L <font file>`.
 ## **Author**
 
 All of the documentation and the majority of the work done was by
-Christopher Jones (cjones@insub.org) and many other ccontributors.
+Christopher Jones (cjones@insub.org) and many other contributors.
 Packaged by Peter Waller (p@pwaller.net), various enhancements by
 Stefano Rivera (stefano@rivera.za.net),
 and lots of help from many contributors!
