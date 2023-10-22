@@ -206,7 +206,7 @@ class FigletFont(object):
     @classmethod
     def infoFont(cls, font, short=False):
         """
-        Get informations of font
+        Get information of font
         """
         data = FigletFont.preloadFont(font)
         infos = []
