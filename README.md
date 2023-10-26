@@ -92,7 +92,7 @@ print(f.renderText('text to render'))
 or
 
 ```py
-from pyfiglet import Figlet
+import pyfiglet
 f = pyfiglet.figlet_format("text to render", font="slant")
 print(f)
 ```
