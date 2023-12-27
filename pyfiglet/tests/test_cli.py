@@ -11,24 +11,13 @@ def test_font_dir():
 
 
 def test_strip():
-    command = "pyfiglet -f doh -s 0"
+    command = "pyfiglet -f slant -s 0"
     expected = '''\
-     000000000     
-   00:::::::::00   
- 00:::::::::::::00 
-0:::::::000:::::::0
-0::::::0   0::::::0
-0:::::0     0:::::0
-0:::::0     0:::::0
-0:::::0 000 0:::::0
-0:::::0 000 0:::::0
-0:::::0     0:::::0
-0:::::0     0:::::0
-0::::::0   0::::::0
-0:::::::000:::::::0
- 00:::::::::::::00 
-   00:::::::::00   
-     000000000
+   ____ 
+  / __ \\
+ / / / /
+/ /_/ / 
+\\____/
 '''
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
     assert result.stdout.decode() == expected
@@ -58,25 +47,14 @@ def test_strip_strange_font(test_font_dir):
 
 # normalize is just strip with padding
 def test_normalize():
-    command = "pyfiglet -f doh -n 0"
+    command = "pyfiglet -f slant -n 0"
     expected = '''\
 
-     000000000     
-   00:::::::::00   
- 00:::::::::::::00 
-0:::::::000:::::::0
-0::::::0   0::::::0
-0:::::0     0:::::0
-0:::::0     0:::::0
-0:::::0 000 0:::::0
-0:::::0 000 0:::::0
-0:::::0     0:::::0
-0:::::0     0:::::0
-0::::::0   0::::::0
-0:::::::000:::::::0
- 00:::::::::::::00 
-   00:::::::::00   
-     000000000
+   ____ 
+  / __ \\
+ / / / /
+/ /_/ / 
+\\____/
 
 '''
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
