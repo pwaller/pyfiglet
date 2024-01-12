@@ -61,7 +61,16 @@ if sys.platform == 'win32':
     SHARED_DIRECTORY = os.path.join(os.environ["APPDATA"], "pyfiglet")
 else:
     SHARED_DIRECTORY = '/usr/local/share/pyfiglet/'
+    shared_dir_paths = [
+        '/usr/share/figlet/',
+        '/usr/local/share/figlet/',
+        # add figlet shared directory
+    ]
 
+    for path in shared_dir_paths:
+        if os.path.isdir(path):
+            SHARED_DIRECTORY = path
+            break
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
@@ -972,6 +981,7 @@ def main():
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
+        print(f'Current shared directory: {SHARED_DIRECTORY}')
         print('\n'.join(sorted(FigletFont.getFonts())))
         exit(0)
 
