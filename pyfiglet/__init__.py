@@ -60,17 +60,27 @@ RESET_COLORS = b'\033[0m'
 if sys.platform == 'win32':
     SHARED_DIRECTORY = os.path.join(os.environ["APPDATA"], "pyfiglet")
 else:
-    SHARED_DIRECTORY = '/usr/local/share/pyfiglet/'
-    shared_dir_paths = [
+    SEARCHED_DIRECTORIES = [
         '/usr/share/figlet/',
         '/usr/local/share/figlet/',
-        # add figlet shared directory
+        '/usr/local/share/pyfiglet/',
+        # add pyfiglet/figlet shared directory
     ]
 
-    for path in shared_dir_paths:
-        if os.path.isdir(path):
-            SHARED_DIRECTORY = path
-            break
+    DIRECTORIES = []
+    directory_count = (len(SEARCHED_DIRECTORIES) - 1)
+    index = 0
+    while index <= directory_count:
+        directory = SEARCHED_DIRECTORIES[index]
+        if os.path.isdir(directory):
+            DIRECTORIES.append(directory)
+        index += 1
+
+    if len(DIRECTORIES) > 0:
+        SHARED_DIRECTORY = DIRECTORIES[0] # get the first directory found
+    else:
+        print('No share directory found.')
+        exit(0)
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
@@ -982,6 +992,7 @@ def main():
 
     if opts.list_fonts:
         print(f'Current shared directory: {SHARED_DIRECTORY}')
+        print('-------------------------')
         print('\n'.join(sorted(FigletFont.getFonts())))
         exit(0)
 
