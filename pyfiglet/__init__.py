@@ -58,10 +58,10 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
 RESET_COLORS = b'\033[0m'
 
 SHARED_DIRECTORIES = [
-    '/usr/share/figlet',
-    '/usr/share/pyfiglet',
     '/usr/local/share/figlet',
     '/usr/local/share/pyfiglet',
+    '/usr/share/figlet',
+    '/usr/share/pyfiglet',
     # add figlet/pyfiglet shared directory path
 ]
 
