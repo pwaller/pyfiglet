@@ -57,30 +57,23 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
 
 RESET_COLORS = b'\033[0m'
 
-if sys.platform == 'win32':
-    SHARED_DIRECTORY = os.path.join(os.environ["APPDATA"], "pyfiglet")
-else:
-    SEARCHED_DIRECTORIES = [
-        '/usr/share/figlet/',
-        '/usr/local/share/figlet/',
-        '/usr/local/share/pyfiglet/',
-        # add pyfiglet/figlet shared directory
-    ]
+SHARED_DIRECTORIES = [
+    '/usr/share/figlet',
+    '/usr/share/pyfiglet',
+    '/usr/local/share/figlet',
+    '/usr/local/share/pyfiglet',
+    # add figlet/pyfiglet shared directory path
+]
 
-    DIRECTORIES = []
-    directory_count = (len(SEARCHED_DIRECTORIES) - 1)
-    index = 0
-    while index <= directory_count:
-        directory = SEARCHED_DIRECTORIES[index]
-        if os.path.isdir(directory):
-            DIRECTORIES.append(directory)
-        index += 1
-
-    if len(DIRECTORIES) > 0:
-        SHARED_DIRECTORY = DIRECTORIES[0] # get the first directory found
+def find_shared_dir():
+    path = ''
+    if sys.platform == 'win32':
+        path = os.path.join(os.environ["APPDATA"], "pyfiglet")
     else:
-        print('No share directory found.')
-        exit(0)
+        for directory in SHARED_DIRECTORIES:
+            if os.path.isdir(directory):
+                path = directory
+    return path
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
@@ -162,7 +155,8 @@ class FigletFont(object):
                 font_path = path
                 break
             else:
-                for location in ("./", SHARED_DIRECTORY):
+                shared_dir = find_shared_dir()
+                for location in ("./", shared_dir):
                     full_name = os.path.join(location, fn)
                     if os.path.isfile(full_name):
                         font_path = pathlib.Path(full_name)
@@ -191,7 +185,8 @@ class FigletFont(object):
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
-        full_file = os.path.join(SHARED_DIRECTORY, font)
+        shared_dir = find_shared_dir()
+        full_file = os.path.join(shared_dir, font)
         if os.path.isfile(font):
             f = open(font, 'rb')
         elif os.path.isfile(full_file):
@@ -216,8 +211,9 @@ class FigletFont(object):
     @classmethod
     def getFonts(cls):
         all_files = importlib.resources.files('pyfiglet.fonts').iterdir()
-        if os.path.isdir(SHARED_DIRECTORY):
-             all_files = itertools.chain(all_files, pathlib.Path(SHARED_DIRECTORY).iterdir())
+        shared_dir = find_shared_dir()
+        if os.path.isdir(shared_dir):
+             all_files = itertools.chain(all_files, pathlib.Path(shared_dir).iterdir())
         return [font.name.split('.', 2)[0] for font
                 in all_files
                 if font.is_file() and cls.isValidFont(font.name)]
@@ -253,7 +249,7 @@ class FigletFont(object):
             location = str(importlib.resources.files('pyfiglet.fonts'))
         else:
             # Figlet is installed using a zipped resource - don't try to upload to it.
-            location = SHARED_DIRECTORY
+            location = find_shared_dir()
 
         print("Installing {} to {}".format(file_name, location))
 
@@ -991,8 +987,6 @@ def main():
     opts, args = parser.parse_args()
 
     if opts.list_fonts:
-        print(f'Current shared directory: {SHARED_DIRECTORY}')
-        print('-------------------------')
         print('\n'.join(sorted(FigletFont.getFonts())))
         exit(0)
 
