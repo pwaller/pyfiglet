@@ -58,15 +58,15 @@ COLOR_CODES = {'BLACK': 30, 'RED': 31, 'GREEN': 32, 'YELLOW': 33, 'BLUE': 34, 'M
 RESET_COLORS = b'\033[0m'
 
 SHARED_DIRECTORIES = [
-    '/usr/local/share/figlet',
     '/usr/local/share/pyfiglet',
-    '/usr/share/figlet',
     '/usr/share/pyfiglet',
+    '/usr/local/share/figlet',
+    '/usr/share/figlet',
     # add figlet/pyfiglet shared directory path
 ]
 
 def find_shared_dir():
-    path = ''
+    path = '/usr/local/share/pyfiglet' # default path
     if sys.platform == 'win32':
         path = os.path.join(os.environ["APPDATA"], "pyfiglet")
     else:
@@ -155,8 +155,7 @@ class FigletFont(object):
                 font_path = path
                 break
             else:
-                shared_dir = find_shared_dir()
-                for location in ("./", shared_dir):
+                for location in ("./", find_shared_dir()):
                     full_name = os.path.join(location, fn)
                     if os.path.isfile(full_name):
                         font_path = pathlib.Path(full_name)
@@ -185,8 +184,7 @@ class FigletFont(object):
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
-        shared_dir = find_shared_dir()
-        full_file = os.path.join(shared_dir, font)
+        full_file = os.path.join(find_shared_dir(), font)
         if os.path.isfile(font):
             f = open(font, 'rb')
         elif os.path.isfile(full_file):
