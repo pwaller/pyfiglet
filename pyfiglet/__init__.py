@@ -67,19 +67,22 @@ SHARED_DIRECTORIES = [
 
 def openFont(font):
     font_path = '/usr/local/share/pyfiglet' # default path
-    for directory in SHARED_DIRECTORIES:
-        if os.path.isdir(directory):
-            for file in os.listdir(directory):
-                if file.split('.')[0] == font.split('.')[0]:
-                    font_path = os.path.join(directory, file)
-                    break
-    # in case of same name but not the same file extension
-    for extension in ('tlf', 'flf'):
-        fn = os.path.join(font, extension)
-        path = os.path.join(font_path, fn)
-        if os.path.isfile(path):
-            font_path = path
-            break
+    if sys.platform == 'win32':
+        font_path = os.path.join(os.environ["APPDATA"], "pyfiglet")
+    else:
+        for directory in SHARED_DIRECTORIES:
+            if os.path.isdir(directory):
+                for file in os.listdir(directory):
+                    if file.split('.')[0] == font.split('.')[0]:
+                        font_path = os.path.join(directory, file)
+                        break
+        # in case of same name but not the same file extension
+        for extension in ('tlf', 'flf'):
+            fn = os.path.join(font, extension)
+            path = os.path.join(font_path, fn)
+            if os.path.isfile(path):
+                font_path = path
+                break
     return pathlib.Path(font_path)
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
