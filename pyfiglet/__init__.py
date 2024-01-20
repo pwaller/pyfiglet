@@ -76,13 +76,13 @@ def openFont(font):
                     if file.split('.')[0] == font.split('.')[0]:
                         font_path = os.path.join(directory, file)
                         break
-        # in case of same name but not the same file extension
-        for extension in ('tlf', 'flf'):
-            fn = os.path.join(font, extension)
-            path = os.path.join(font_path, fn)
-            if os.path.isfile(path):
-                font_path = path
-                break
+    # in case of same name but not the same file extension
+    for extension in ('tlf', 'flf'):
+        fn = os.path.join(font, extension)
+        path = os.path.join(font_path, fn)
+        if os.path.isfile(path):
+            font_path = path
+            break
     return pathlib.Path(font_path)
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
