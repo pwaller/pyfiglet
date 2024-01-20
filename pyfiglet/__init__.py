@@ -65,15 +65,22 @@ SHARED_DIRECTORIES = [
     # add figlet/pyfiglet shared directory path
 ]
 
-def find_shared_dir():
-    path = '/usr/local/share/pyfiglet' # default path
-    if sys.platform == 'win32':
-        path = os.path.join(os.environ["APPDATA"], "pyfiglet")
-    else:
-        for directory in SHARED_DIRECTORIES:
-            if os.path.isdir(directory):
-                path = directory
-    return path
+def openFont(font):
+    font_path = '/usr/local/share/pyfiglet' # default path
+    for directory in SHARED_DIRECTORIES:
+        if os.path.isdir(directory):
+            for file in os.listdir(directory):
+                if file.split('.')[0] == font.split('.')[0]:
+                    font_path = os.path.join(directory, file)
+                    break
+    # in case of same name but not the same file extension
+    for extension in ('tlf', 'flf'):
+        fn = os.path.join(font, extension)
+        path = os.path.join(font_path, fn)
+        if os.path.isfile(path):
+            font_path = path
+            break
+    return pathlib.Path(font_path)
 
 def figlet_format(text, font=DEFAULT_FONT, **kwargs):
     fig = Figlet(font, **kwargs)
@@ -155,11 +162,10 @@ class FigletFont(object):
                 font_path = path
                 break
             else:
-                for location in ("./", find_shared_dir()):
-                    full_name = os.path.join(location, fn)
-                    if os.path.isfile(full_name):
-                        font_path = pathlib.Path(full_name)
-                        break
+                font_path = openFont(fn)
+                if not os.path.isfile(font_path):
+                    raise FontNotFound(font)
+                break
 
         # Unzip the first file if this file/stream looks like a ZIP file.
         if font_path:
@@ -184,7 +190,7 @@ class FigletFont(object):
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
-        full_file = os.path.join(find_shared_dir(), font)
+        full_file = openFont(font)
         if os.path.isfile(font):
             f = open(font, 'rb')
         elif os.path.isfile(full_file):
@@ -209,9 +215,14 @@ class FigletFont(object):
     @classmethod
     def getFonts(cls):
         all_files = importlib.resources.files('pyfiglet.fonts').iterdir()
-        shared_dir = find_shared_dir()
-        if os.path.isdir(shared_dir):
-             all_files = itertools.chain(all_files, pathlib.Path(shared_dir).iterdir())
+        shared_dir = set()
+        for directory in SHARED_DIRECTORIES:
+            if os.path.isdir(directory):
+                shared_dir.update(pathlib.Path(directory).iterdir())
+        if shared_dir:
+            all_files = itertools.chain(all_files, shared_dir)
+        else:
+            all_files = itertools.chain(all_files)
         return [font.name.split('.', 2)[0] for font
                 in all_files
                 if font.is_file() and cls.isValidFont(font.name)]
@@ -247,7 +258,7 @@ class FigletFont(object):
             location = str(importlib.resources.files('pyfiglet.fonts'))
         else:
             # Figlet is installed using a zipped resource - don't try to upload to it.
-            location = find_shared_dir()
+            location = '/usr/local/share/pyfiglet'
 
         print("Installing {} to {}".format(file_name, location))
 
