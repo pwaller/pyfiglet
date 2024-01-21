@@ -78,7 +78,7 @@ def openFont(font):
                         break
     # in case of same name but not the same file extension
     for extension in ('tlf', 'flf'):
-        fn = os.path.join(font, extension)
+        fn = os.path.join(font.split('.')[0], extension)
         path = os.path.join(font_path, fn)
         if os.path.isfile(path):
             font_path = path
