@@ -144,6 +144,13 @@ class FigletFont(object):
             if path.exists():
                 font_path = path
                 break
+            if sys.platform == 'win32':
+                path = os.path.join(os.environ["APPDATA"], "pyfiglet")
+                if os.path.exists(path):
+                    path = os.path.join(path, fn)
+                    if os.path.isfile(path):
+                        font_path = pathlib.Path(path)
+                        break
             else:
                 for directory in SHARED_DIRECTORIES:
                     if os.path.isdir(directory):
@@ -176,12 +183,19 @@ class FigletFont(object):
             return False
         f = None
         full_file = ''
-        for directory in SHARED_DIRECTORIES:
-            if os.path.isdir(directory):
-                path = os.path.join(directory, font)
-                if os.path.isfile(path):
-                    full_file = pathlib.Path(path)
-                    break
+        if sys.platform == 'win32':
+                path = os.path.join(os.environ["APPDATA"], "pyfiglet")
+                if os.path.isdir(path):
+                    path = os.path.join(path, font)
+                    if os.path.isfile(path):
+                        full_file = pathlib.Path(path)
+        else:
+            for directory in SHARED_DIRECTORIES:
+                if os.path.isdir(directory):
+                    path = os.path.join(directory, font)
+                    if os.path.isfile(path):
+                        full_file = pathlib.Path(path)
+                        break
         if os.path.isfile(font):
             f = open(font, 'rb')
         elif os.path.isfile(full_file):
@@ -207,9 +221,14 @@ class FigletFont(object):
     def getFonts(cls):
         all_files = importlib.resources.files('pyfiglet.fonts').iterdir()
         shared_dir = set()
-        for directory in SHARED_DIRECTORIES:
-            if os.path.isdir(directory):
-                shared_dir.update(pathlib.Path(directory).iterdir())
+        if sys.platform == 'win32':
+            path = os.path.join(os.environ["APPDATA"], "pyfiglet")
+            if os.path.isdir(path):
+                shared_dir.update(pathlib.Path(path).iterdir())
+        else:
+            for directory in SHARED_DIRECTORIES:
+                if os.path.isdir(directory):
+                    shared_dir.update(pathlib.Path(directory).iterdir())
         if shared_dir:
             all_files = itertools.chain(all_files, shared_dir)
         else:
