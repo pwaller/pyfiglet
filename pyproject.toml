@@ -1,3 +1,57 @@
-[build-system]
-requires = ["setuptools>=68.0.0"]
-build-backend = "setuptools.build_meta:__legacy__"
+[project]
+name = "rich-pyfiglet"
+version = "0.1.0"
+description = "A library that wraps PyFiglet with the Rich library for rendering ASCII art in the terminal."
+readme = "README.md"
+authors = [
+    { name = "edward-jazzhands", email = "ed.jazzhands@gmail.com" }
+]
+license = { text = "MIT" }
+keywords = [
+    "python", "pyfiglet", "figlet", "ascii", "rich", "cli", "color", "terminal", "banner"
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+requires-python = ">=3.8.1"
+dependencies = [
+    "rich>=14.0.0",
+]
+
+[project.urls]
+Repository = "https://github.com/edward-jazzhands/rich-pyfiglet"
+Changelog = "https://github.com/edward-jazzhands/rich-pyfiglet/blob/master/Changelog.md"
+
+# [project.scripts]
+# rich-pyfiglet = "rich-pyfiglet.cli:main"
+
+# [build-system]
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 110
+
+[tool.mypy]
+python_version = "3.10"
+pretty = true
+strict = true
+
+[dependency-groups]
+dev = [
+    "black>=24.8.0",
+    "mypy>=1.14.1",
+    "ruff>=0.11.9",
+]

@@ -1,7 +1,13 @@
 *.pyc
+*__pycache__/
 *~
 .*.swp
 /build/
 /dist/
 /pyfiglet.egg-info/
 env*/
+/.venv/
+*_cache/
+links.txt
+/sandbox/
+lolcat*

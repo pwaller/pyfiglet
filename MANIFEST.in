@@ -1,4 +1,0 @@
-include pyfiglet/fonts/*.flf
-include pyfiglet/fonts/*.flc
-include LICENSE
-recursive-include doc *

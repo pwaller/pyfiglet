@@ -1,5 +1,0 @@
-#!/bin/sh
-
-cd "$(dirname "$0")"/..
-export PYTHONPATH=$(pwd)
-exec python -m pyfiglet "$@"
