@@ -229,7 +229,14 @@ class FigletFont(object):
         """
         Install the specified font file to this system.
         """
-        if hasattr(importlib.resources.files('pyfiglet'), 'resolve'):
+
+        containers = [
+            os.environ.get("container", False), # Flatpak
+            os.environ.get("APPIMAGE", False),
+            os.environ.get("SNAP", False),
+        ]
+
+        if hasattr(importlib.resources.files('pyfiglet'), 'resolve') and not any( containers):
             # Figlet looks like a standard directory - so lets use that to install new fonts.
             location = str(importlib.resources.files('pyfiglet.fonts'))
         else:
