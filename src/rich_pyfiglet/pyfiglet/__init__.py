@@ -5,7 +5,7 @@
 Python FIGlet adaption
 Original by Peter Waller and various contributors.
 
-Modifications by Edward Jazzhands for Textual-Pyfiglet.
+Modifications by Edward Jazzhands for Rich-Pyfiglet.
 """
 
 from __future__ import print_function, unicode_literals
@@ -22,7 +22,7 @@ from optparse import OptionParser
 
 from .version import __version__
 
-# ~ Textual-Pyfiglet additions to imports
+# ~ Rich-Pyfiglet additions to imports
 
 from typing import Any
 
@@ -172,7 +172,7 @@ class FigletFont(object):
         font_path = None
         for extension in ("tlf", "flf"):
             fn = "%s.%s" % (font, extension)
-            path = importlib.resources.files("textual_pyfiglet.pyfiglet.fonts").joinpath(fn)
+            path = importlib.resources.files("rich_pyfiglet.pyfiglet.fonts").joinpath(fn)
             if path.exists():
                 font_path = path
                 break
@@ -212,7 +212,7 @@ class FigletFont(object):
         elif os.path.isfile(full_file):
             f = open(full_file, "rb")
         else:
-            f = importlib.resources.files("textual_pyfiglet.pyfiglet.fonts").joinpath(font).open("rb")
+            f = importlib.resources.files("rich_pyfiglet.pyfiglet.fonts").joinpath(font).open("rb")
 
         if zipfile.is_zipfile(f):
             # If we have a match, the ZIP file spec says we should just read the first file in the ZIP.
@@ -230,7 +230,7 @@ class FigletFont(object):
 
     @classmethod
     def getFonts(cls):
-        all_files = importlib.resources.files("textual_pyfiglet.pyfiglet.fonts").iterdir()
+        all_files = importlib.resources.files("rich_pyfiglet.pyfiglet.fonts").iterdir()
         if os.path.isdir(SHARED_DIRECTORY):
             all_files = itertools.chain(all_files, pathlib.Path(SHARED_DIRECTORY).iterdir())
         return [
@@ -268,9 +268,9 @@ class FigletFont(object):
         """
         Install the specified font file to this system.
         """
-        if hasattr(importlib.resources.files("textual_pyfiglet.pyfiglet"), "resolve"):
+        if hasattr(importlib.resources.files("rich_pyfiglet.pyfiglet"), "resolve"):
             # Figlet looks like a standard directory - so lets use that to install new fonts.
-            location = str(importlib.resources.files("textual_pyfiglet.pyfiglet.fonts"))
+            location = str(importlib.resources.files("rich_pyfiglet.pyfiglet.fonts"))
         else:
             # Figlet is installed using a zipped resource - don't try to upload to it.
             location = SHARED_DIRECTORY
@@ -902,6 +902,10 @@ class Figlet(object):
     # not using the @property decorator and were not configured to be changeable
     # in real time. I added the @property decorators and changed them to be
     # getter and setter methods.
+    # This is not actually needed for Rich-Pyfiglet - it's needed for
+    # Textual-Pyfiglet to allow real-time changes. But since Textual-Pyfiglet
+    # depends on this package, any additions to PyFiglet itself have to be done
+    # in here. NOTE: In the future this should be a PR to PyFiglet itself.
 
     @property
     def direction(self):

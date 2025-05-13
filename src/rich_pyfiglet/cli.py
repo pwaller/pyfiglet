@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import get_args, cast
 import click
-from textual_pyfiglet.pyfiglet.fonts import ALL_FONTS
-from textual_pyfiglet.rich_figlet import GRADIENT_DIRECTIONS
+from rich_pyfiglet.pyfiglet.fonts import ALL_FONTS
+from rich_pyfiglet.rich_figlet import GRADIENT_DIRECTIONS
 
 
 font_help = "Specify the font to use. Use 'list' to see available fonts."
@@ -45,14 +45,9 @@ def cli(
     list: bool,
     dev: bool = False,
 ) -> None:
-    """Textual-PyFiglet and Rich-PyFiglet
+    """CLI for Rich-PyFiglet"""
 
-    Just run `textual-pyfiglet` to see the Textual-Pyfiglet demo app.
-
-    If no main argument is provided, the Textual-Pyfiglet demo app will be launched.
-    If a main argument is provided [TEXT], it will print a RichFiglet object to the console.
-    """
-    # If no main argument is provided, run the Textual UI
+    # If no main argument is provided, check for the --list flag.
     if text is None:
         if list:
             click.echo("Available fonts:")
@@ -60,12 +55,11 @@ def cli(
                 click.echo(f"- {fontfoo}")
             return
         else:
-            from textual_pyfiglet.demo import TextualPyFigletDemo
+            click.echo("Use -l or --list to see available fonts.")
 
-        TextualPyFigletDemo().run()
     # Providing a main argument will run the RichFiglet class in CLI mode.
     else:
-        from textual_pyfiglet.rich_figlet import RichFiglet
+        from rich_pyfiglet.rich_figlet import RichFiglet
         from rich.console import Console
 
         console = Console()

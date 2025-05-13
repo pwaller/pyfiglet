@@ -1,10 +1,11 @@
 """Module for the RichPyFiglet class"""
 
 from __future__ import annotations
-from typing import get_args, Literal
+from typing import get_args, Literal, Callable
 import os
 import time
 import threading
+from functools import partial
 from queue import Queue, Empty
 
 from rich.console import Console, ConsoleOptions, RenderResult
@@ -16,80 +17,12 @@ from rich.measure import Measurement
 from rich.color import Color, blend_rgb
 from rich.panel import Panel
 
-from textual_pyfiglet.pyfiglet import Figlet
-from textual_pyfiglet.pyfiglet.fonts import ALL_FONTS
+from rich_pyfiglet.pyfiglet import Figlet
+from rich_pyfiglet.pyfiglet.fonts import ALL_FONTS
+from rich_pyfiglet.box_constants import BOX_STYLES, BOXES
 
-from rich.box import (
-    ASCII,
-    ASCII2,
-    ASCII_DOUBLE_HEAD,
-    SQUARE,
-    SQUARE_DOUBLE_HEAD,
-    MINIMAL,
-    MINIMAL_HEAVY_HEAD,
-    MINIMAL_DOUBLE_HEAD,
-    SIMPLE,
-    SIMPLE_HEAD,
-    SIMPLE_HEAVY,
-    HORIZONTALS,
-    ROUNDED,
-    HEAVY,
-    HEAVY_EDGE,
-    HEAVY_HEAD,
-    DOUBLE,
-    DOUBLE_EDGE,
-    MARKDOWN,
-)
-
-BOX_STYLES = Literal[
-    "ASCII",
-    "ASCII2",
-    "ASCII_DOUBLE_HEAD",
-    "SQUARE",
-    "SQUARE_DOUBLE_HEAD",
-    "MINIMAL",
-    "MINIMAL_HEAVY_HEAD",
-    "MINIMAL_DOUBLE_HEAD",
-    "SIMPLE",
-    "SIMPLE_HEAD",
-    "SIMPLE_HEAVY",
-    "HORIZONTALS",
-    "ROUNDED",
-    "HEAVY",
-    "HEAVY_EDGE",
-    "HEAVY_HEAD",
-    "DOUBLE",
-    "DOUBLE_EDGE",
-    "MARKDOWN",
-]
-
-BOXES = {
-    "ASCII": ASCII,
-    "ASCII2": ASCII2,
-    "ASCII_DOUBLE_HEAD": ASCII_DOUBLE_HEAD,
-    "SQUARE": SQUARE,
-    "SQUARE_DOUBLE_HEAD": SQUARE_DOUBLE_HEAD,
-    "MINIMAL": MINIMAL,
-    "MINIMAL_HEAVY_HEAD": MINIMAL_HEAVY_HEAD,
-    "MINIMAL_DOUBLE_HEAD": MINIMAL_DOUBLE_HEAD,
-    "SIMPLE": SIMPLE,
-    "SIMPLE_HEAD": SIMPLE_HEAD,
-    "SIMPLE_HEAVY": SIMPLE_HEAVY,
-    "HORIZONTALS": HORIZONTALS,
-    "ROUNDED": ROUNDED,
-    "HEAVY": HEAVY,
-    "HEAVY_EDGE": HEAVY_EDGE,
-    "HEAVY_HEAD": HEAVY_HEAD,
-    "DOUBLE": DOUBLE,
-    "DOUBLE_EDGE": DOUBLE_EDGE,
-    "MARKDOWN": MARKDOWN,
-}
-
-GRADIENT_DIRECTIONS = Literal["horizontal", "vertical", "none"]
-ANIMATION_TYPE = Literal["smooth", "switch"]
-# smooth: Will create gradients between each color in the list
-# switch: Will simply hard switch to the next color in the list
-#   Note that gradients will not be used/created in this mode.
+GRADIENT_DIRECTIONS = Literal["horizontal", "vertical"]
+ANIMATION_TYPE = Literal["gradient_up", "gradient_down", "smooth_strobe", "fast_strobe"]
 
 
 class RichFiglet:
@@ -102,46 +35,50 @@ class RichFiglet:
         colors: list[str] | None = None,
         gradient_dir: GRADIENT_DIRECTIONS = "vertical",
         quality: int | None = None,
-        border: BOX_STYLES | None = None,
-        border_padding: tuple[int, int] = (1, 4),
-        border_color: str | None = None,
         animate: bool = False,
-        animation_type: ANIMATION_TYPE = "smooth",
-        speed: float = 0.2,
+        animation_type: ANIMATION_TYPE = "gradient_down",
+        fps: float = 5.0,
         remove_blank_lines: bool = False,
+        border: BOX_STYLES | None = None,
+        border_padding: tuple[int, int] = (1, 2),
+        border_color: str | None = None,
         dev_mode: bool = False,
     ):
         """Create a RichFiglet object.
 
         Args:
             text: The text to render.
-            font: The font to use. Defaults to "standard".
+            font: The font to use. Defaults to 'standard'.
             width: The width of the rendered text. If None, will use the terminal width.
             colors: A list of colors to use for gradients or animations. Each color can be a name, hex code,
                 or RGB triplet. If None, no gradient or animation will be applied. For available named colors,
                 see: https://rich.readthedocs.io/en/stable/appendix/colors.html
-            gradient_dir: The direction of the gradient. Can be "none", "horizontal", or "vertical".
-                Used in combination with animation types to create different effects.
-                See the Rich-Pyfiglet documentation for examples:
-                #! INSERT LINK HERE
+            gradient_dir: The direction of the gradient. Can be 'vertical' or 'horizontal'.
+                Vertical can be used in combination with the 'gradient' animation mode.
+                Note that if `animation_type` is set to strobe, the gradient_dir setting will be ignored.
             quality: The number of steps to blend between two colors. Defaults to None, which enables
                 auto mode. Auto mode sets the quality based on the width or height of the rendered banner.
-                One exception: if animate=True, gradient_dir="none", and animation_type="smooth",
+                One exception: if `animate` is True and `animation_type` is 'smooth_strobe',
                 auto mode will default to 10 steps per gradient.
-            border: The box style to use for the border. Can be any of the box styles from Rich.
             animate: Whether to animate the text. Requires at least two colors.
                 Note that animation is unfortunately not supported with horizontal gradients.
-            animation_type: The animation interpolation mode. Can be "smooth" or "switch".
-                - "smooth": Colors blend gradually (e.g. via linear gradient).
-                - "switch": Hard cuts between colors with no interpolation.
-                Note: switch mode does not use gradients.
-                If animation_type is "smooth" and gradient_dir is "none", the result is a pulsing effect
-                that changes the entire banner's color simultaneously.
-            speed: Time between animation steps in seconds. Higher values slow the animation;
-                lower values speed it up. Ignored if animate=False.
+            animation_type:
+                - 'gradient_up': The Color gradient will flow vertically across the banner upwards.
+                - 'gradient_down': The Color gradient will flow vertically across the banner downwards.
+                - 'smooth_strobe': The entire banner will smoothly transition between colors
+                - 'fast_strobe': The entire banner will hard switch to the next color.
+                                 Recommended to lower the FPS to avoid giving people seizures.
+            fps: Frames per second for the animation. This is a float so that you can set it to values
+                such as 0.5 if you desire.
             remove_blank_lines: When True, all blank lines from the inside of the rendered ASCII art
                 will be removed. Some fonts have gaps between the lines- this will remove them and
                 compress the banner down to the minimum size.
+            border: The box style to use for the border. Can be any of the box styles from Rich.
+                Note that border is an argument because it is necessary for the RichFiglet to
+                take the border and padding into account when rendering. It is recommended to use
+                the border argument in the constructor, rather than adding a border afterwards.
+            border_padding: The padding to use for the border. Defaults to (1, 2) which is (top/bottom, left/right).
+            border_color: The color of the border. Can be a name, hex code, or RGB triplet.
             dev_mode: When True, will print debug information to the console.
         """
 
@@ -153,28 +90,24 @@ class RichFiglet:
             raise ValueError("Text cannot be empty. Please provide a valid text string.")
         if font not in get_args(ALL_FONTS):
             raise ValueError(f"Font {font} is not in the fonts folder.")
-        if gradient_dir not in ["none", "horizontal", "vertical"]:
-            raise ValueError("Gradient direction must be 'none', 'vertical', or 'horizontal'.")
+        if gradient_dir not in ["vertical", "horizontal"]:
+            raise ValueError("Gradient direction must be 'vertical' or 'horizontal'.")
         if animate and (colors is None or len(colors) < 2):
             raise ValueError("At least two colors are required for animation.")
-        if animate and speed <= 0:
-            raise ValueError("Speed must be greater than 0.")
+        if animate and fps <= 0:
+            raise ValueError("Frames per second must be greater than 0.")
         if quality and (colors is None or len(colors) < 2):
             raise ValueError("At least two colors are required to set a gradient quality.")
         if quality and quality < 2:
             raise ValueError("Gradient Quality must be 2 or higher.")
-        if animation_type not in ["smooth", "switch"]:
-            raise ValueError("Animation type must be either 'smooth' or 'switch'.")
-        if animate and gradient_dir == "horizontal":
+        if animation_type not in ["gradient_up", "gradient_down", "smooth_strobe", "fast_strobe"]:
+            raise ValueError(
+                "Animation type must be 'gradient_up', 'gradient_down', 'smooth_strobe', or 'fast_strobe'."
+            )
+        if animate and gradient_dir == "horizontal" and animation_type in ["gradient_up", "gradient_down"]:
             raise ValueError(
                 "Animation is unfortunately not supported with horizontal gradients. "
-                "(I tried to make it work, but it was far too glitchy)."
-            )
-        if colors and len(colors) > 1 and gradient_dir == "none" and not animate:
-            raise ValueError(
-                "You have more than one color, gradient_dir is 'none' (for strobe), and yet "
-                "animate is False. This doesn't make sense. Disable animation, remove extra colors, "
-                "or change the gradient_dir."
+                "(I tried to make it work, but it was far too glitchy. PRs welcome.)"
             )
 
         if width:
@@ -200,17 +133,21 @@ class RichFiglet:
         self.colors = colors
         self.gradient_dir = gradient_dir
         self.animate = animate
+        self.animation_type = animation_type
         self.quality = quality
         self.border = border
         self.border_padding = border_padding
         self.border_color = border_color
-        self.speed = speed
+        self.fps = fps
         self.remove_blank_lines = remove_blank_lines
         self.animation_running = False
         self.dev_mode = dev_mode
         user_set_quality = False
         if quality:
             user_set_quality = True
+        if animate:
+            # Queue to store pre-rendered frames
+            self.frame_queue: Queue[Lines | Panel] = Queue(maxsize=3)
 
         self.gradient: list[Color] = []
         parsed_colors: list[Color] = []
@@ -298,7 +235,7 @@ class RichFiglet:
         elif len(parsed_colors) > 1:
             self.color = None
 
-            if gradient_dir in ["vertical", "horizontal"]:
+            if not animate or (animate and animation_type in ["gradient_up", "gradient_down"]):
 
                 num_of_gradients = len(parsed_colors) - 1
                 if gradient_dir == "vertical":
@@ -351,24 +288,34 @@ class RichFiglet:
                 else:  # gradient_dir == "horizontal":
                     self.rendered_with_colors = self.build_with_gradient("horizontal")
 
-            else:  # gradient_dir is "none":
+            else:  # Animating and animation mode is smooth_strobe or fast_strobe
 
-                quality = quality if quality else 10
+                if animation_type == "smooth_strobe":
+                    quality = quality if quality else 10
 
-                for i in range(len(parsed_colors) - 1):  # stop at second to last color because of [i + 1]
-                    self.gradient += self.make_gradient(parsed_colors[i], parsed_colors[i + 1], quality)
+                    for i in range(len(parsed_colors) - 1):  # stop at second to last color because of [i + 1]
+                        self.gradient += self.make_gradient(parsed_colors[i], parsed_colors[i + 1], quality)
 
-                if self.dev_mode:
-                    print(f"Colors in gradient: {len(self.gradient)}")
+                    if self.dev_mode:
+                        print(f"Colors in gradient: {len(self.gradient)}")
 
-                # Blend last color back into first color
-                self.gradient += self.make_gradient(parsed_colors[-1], parsed_colors[0], quality)
-                if self.dev_mode:
-                    print(f"Colors in gradient after looping: {len(self.gradient)}")
+                    # Blend last color back into first color
+                    self.gradient += self.make_gradient(parsed_colors[-1], parsed_colors[0], quality)
+                    if self.dev_mode:
+                        print(f"Colors in gradient after looping: {len(self.gradient)}")
 
-                # Set the first color for our strobe animation
-                for line in self.rendered_lines:
-                    line.stylize(Style(color=self.gradient[0]))
+                    # Set the first color for our strobe animation
+                    for line in self.rendered_lines:
+                        line.stylize(Style(color=self.gradient[0]))
+
+                else:  # animation type is "fast_strobe"
+
+                    self.gradient = parsed_colors
+
+                    for line in self.rendered_lines:
+                        line.stylize(Style(color=self.gradient[0]))
+                    # In fast strobe mode, we don't require any built gradient, so just use
+                    # the parsed colors as the gradient.
 
     #########################
     # ~ Utility Functions ~ #
@@ -461,9 +408,9 @@ class RichFiglet:
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
 
-        if self.gradient:
+        if not self.animate:
 
-            if not self.animate:
+            if self.gradient:
                 if self.border:
                     panel = Panel(
                         self.rendered_with_colors,
@@ -476,26 +423,28 @@ class RichFiglet:
                 else:
                     yield self.rendered_with_colors
 
+            # If there's no gradient, it's either plain or 1 color
             else:
-                if self.gradient_dir == "vertical":
-                    self.vertical_animation(console, self.rendered_with_colors, self.gradient, self.speed)
-                elif self.gradient_dir == "none":
-                    self.strobe_animation(console, self.rendered_lines, self.gradient, self.speed)
-                # Horizontal animation is not supported and will raise an error in __init__ if attempted.
+                if self.border:
+                    panel = Panel(
+                        self.rendered_lines,
+                        box=BOXES[self.border],
+                        padding=self.border_padding,
+                        width=self.reported_width,
+                        border_style=self.border_style_obj,
+                    )
+                    yield panel
+                else:
+                    yield self.rendered_lines
 
-        # If there's no gradient, it's either plain or 1 color.
-        else:
-            if self.border:
-                panel = Panel(
-                    self.rendered_lines,
-                    box=BOXES[self.border],
-                    padding=self.border_padding,
-                    width=self.reported_width,
-                    border_style=self.border_style_obj,
-                )
-                yield panel
-            else:
-                yield self.rendered_lines
+        else:  # animate is True:
+
+            if self.animation_type in ["gradient_up", "gradient_down"]:
+                self.vertical_animation(console, self.rendered_with_colors, self.gradient, self.fps)
+            elif self.animation_type == "smooth_strobe":
+                self.smooth_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
+            elif self.animation_type == "fast_strobe":
+                self.fast_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
 
     def __rich_measure__(self, console: Console, options: ConsoleOptions) -> Measurement:
         return Measurement(self.reported_width, options.max_width)
@@ -504,59 +453,90 @@ class RichFiglet:
     # ~ Animation Functions ~ #
     ###########################
 
+    # Background worker function to pre-render frames
+    def frame_worker(self, next_frame_callable: Callable[[], Lines | Panel]):
+        while self.animation_running:
+            if not self.frame_queue.full():
+                next_frame = next_frame_callable()
+                # self.previous_frame = next_frame
+                self.frame_queue.put(next_frame)
+            else:
+                # Small sleep to prevent CPU hogging when queue is full
+                time.sleep(0.01)
+
+    def get_renderable(self, next_frame_callable: Callable[[], Lines | Panel]) -> Lines | Panel:
+        try:
+            # Get the next pre-rendered frame from the queue
+            return self.frame_queue.get(block=False)
+        except Empty:
+            # Safety fallback (shouldn't happen), make a frame on demand
+            return next_frame_callable()
+
     def vertical_animation(
         self,
         console: Console,
         rendered_lines: Lines,
         colors: list[Color],
-        frame_duration: float,
+        fps: float,
     ):
-        animation_fps = 1.0 / frame_duration
         self.position = 0
         self.animation_running = True
-        rendered_lines.append(Text("\nPress ctrl+c to continue", style=Style(italic=True, dim=True)))
+        if not self.border:
+            rendered_lines.append(Text("\nPress ctrl+c to continue", style=Style(italic=True, dim=True)))
 
-        # Create a queue to store pre-rendered frames
-        frame_queue: Queue[Lines] = Queue(maxsize=3)
-        frame_queue.put(rendered_lines)  # Initial render is the first frame
+        self.frame_queue.put(rendered_lines)  # Initial render is the first frame
 
-        def make_next_frame() -> Lines:
+        def make_next_frame() -> Lines | Panel:
 
             for i, text_obj in enumerate(rendered_lines):
-                if i < len(rendered_lines) - 1:  # dont color the last line
+                if not self.border:
+                    # If there's no border, it'll add an extra line at the end that says
+                    # "Press ctrl+c to continue". So we want to skip coloring that line.
+                    if i < len(rendered_lines) - 1:
+                        color_index = (i + self.position) % len(colors)
+                        text_obj.stylize(Style(color=colors[color_index]))
+
+                # If there is a border, we don't need to add that last line,
+                # since its already in the panel (below).
+                else:
                     color_index = (i + self.position) % len(colors)
                     text_obj.stylize(Style(color=colors[color_index]))
 
-            self.position += 1
+            if self.border:
+                panel = Panel(
+                    rendered_lines,
+                    box=BOXES[self.border],
+                    padding=self.border_padding,
+                    width=self.reported_width,
+                    border_style=self.border_style_obj,
+                    subtitle="Press ctrl+c to continue",
+                    subtitle_align="left",
+                )
+                if self.animation_type == "gradient_up":
+                    self.position += 1
+                else:  # gradient_down
+                    self.position -= 1
+                return panel
+
+            if self.animation_type == "gradient_up":
+                self.position += 1
+            else:  # gradient_down
+                self.position -= 1
             return rendered_lines
 
-        # Background worker function to pre-render frames
-        def frame_worker():
-            while self.animation_running:
-                if not frame_queue.full():
-                    next_frame = make_next_frame()
-                    # self.previous_frame = next_frame
-                    frame_queue.put(next_frame)
-                else:
-                    # Small sleep to prevent CPU hogging when queue is full
-                    time.sleep(0.01)
-
-        def get_renderable() -> Lines:
-            try:
-                # Get the next pre-rendered frame from the queue
-                return frame_queue.get(block=False)
-            except Empty:
-                # Safety fallback (shouldn't happen), make a frame on demand
-                return make_next_frame()
-
         # Start the background worker thread
-        worker_thread = threading.Thread(target=frame_worker, daemon=True)
+        worker_thread = threading.Thread(target=partial(self.frame_worker, make_next_frame), daemon=True)
         worker_thread.start()
 
-        while not frame_queue.full():
+        # Ensure the queue is full before proceeding
+        while not self.frame_queue.full():
             time.sleep(0.01)
 
-        with Live(console=console, refresh_per_second=animation_fps, get_renderable=get_renderable) as live:
+        with Live(
+            console=console,
+            refresh_per_second=fps,
+            get_renderable=partial(self.get_renderable, make_next_frame),
+        ) as live:
 
             try:
                 while self.animation_running:
@@ -573,59 +553,130 @@ class RichFiglet:
                 self.animation_running = False
                 worker_thread.join(timeout=0.5)  # Make sure worker thread terminates
 
-    def strobe_animation(
+    def smooth_strobe_animation(
         self,
         console: Console,
         rendered_lines: Lines,
         colors: list[Color],
-        frame_duration: float,
+        fps: float,
     ):
-        animation_fps = 1.0 / frame_duration
         self.position = 0
         self.animation_running = True
-        rendered_lines.append(Text("\nPress ctrl+c to continue", style=Style(italic=True, dim=True)))
+        if not self.border:
+            rendered_lines.append(Text("\nPress ctrl+c to continue", style=Style(italic=True, dim=True)))
 
         # Create a queue to store pre-rendered frames
-        frame_queue: Queue[Lines] = Queue(maxsize=3)
-        frame_queue.put(rendered_lines)  # Initial render is the first frame
+        self.frame_queue.put(rendered_lines)  # Initial render is the first frame
 
-        def make_next_frame() -> Lines:
+        def make_next_frame() -> Lines | Panel:
 
             color_index = self.position % len(colors)
             for i, text_obj in enumerate(rendered_lines):
-                if i < len(rendered_lines) - 1:  # dont color the last line
+                if not self.border:
+                    if i < len(rendered_lines) - 1:  # dont color the last line
+                        text_obj.stylize(Style(color=colors[color_index]))
+                else:
                     text_obj.stylize(Style(color=colors[color_index]))
+
+            if self.border:
+                panel = Panel(
+                    rendered_lines,
+                    box=BOXES[self.border],
+                    padding=self.border_padding,
+                    width=self.reported_width,
+                    border_style=self.border_style_obj,
+                    subtitle="Press ctrl+c to continue",
+                    subtitle_align="left",
+                )
+                self.position += 1
+                return panel
 
             self.position += 1
             return rendered_lines
 
-        # Background worker function to pre-render frames
-        def frame_worker():
-            while self.animation_running:
-                if not frame_queue.full():
-                    next_frame = make_next_frame()
-                    # self.previous_frame = next_frame
-                    frame_queue.put(next_frame)
-                else:
-                    # Small sleep to prevent CPU hogging when queue is full
-                    time.sleep(0.01)
-
-        def get_renderable() -> Lines:
-            try:
-                # Get the next pre-rendered frame from the queue
-                return frame_queue.get(block=False)
-            except Empty:
-                # Safety fallback (shouldn't happen), make a frame on demand
-                return make_next_frame()
-
         # Start the background worker thread
-        worker_thread = threading.Thread(target=frame_worker, daemon=True)
+        worker_thread = threading.Thread(target=partial(self.frame_worker, make_next_frame), daemon=True)
         worker_thread.start()
 
-        while not frame_queue.full():
+        # Ensure the queue is full before proceeding
+        while not self.frame_queue.full():
             time.sleep(0.01)
 
-        with Live(console=console, refresh_per_second=animation_fps, get_renderable=get_renderable) as live:
+        with Live(
+            console=console,
+            refresh_per_second=fps,
+            get_renderable=partial(self.get_renderable, make_next_frame),
+        ) as live:
+
+            try:
+                while self.animation_running:
+                    time.sleep(0.1)  # Keep the main thread alive
+
+                    # The Live object runs its own loop in a separate thread to call get_renderable.
+                    # The main thread needs to stay alive for the animation to continue.
+                    # This sleep does not control animation speed. It's just to prevent
+                    # the while loop from spinning at 100% CPU.
+
+            except KeyboardInterrupt:
+                live.stop()
+            finally:
+                self.animation_running = False
+                worker_thread.join(timeout=0.5)  # Make sure worker thread terminates
+
+    def fast_strobe_animation(
+        self,
+        console: Console,
+        rendered_lines: Lines,
+        colors: list[Color],
+        fps: float,
+    ):
+        self.position = 0
+        self.animation_running = True
+        if not self.border:
+            rendered_lines.append(Text("\nPress ctrl+c to continue", style=Style(italic=True, dim=True)))
+
+        # Create a queue to store pre-rendered frames
+        self.frame_queue.put(rendered_lines)  # Initial render is the first frame
+
+        def make_next_frame() -> Lines | Panel:
+
+            color_index = self.position % len(colors)
+            for i, text_obj in enumerate(rendered_lines):
+                if not self.border:
+                    if i < len(rendered_lines) - 1:  # dont color the last line
+                        text_obj.stylize(Style(color=colors[color_index]))
+                else:
+                    text_obj.stylize(Style(color=colors[color_index]))
+
+            if self.border:
+                panel = Panel(
+                    rendered_lines,
+                    box=BOXES[self.border],
+                    padding=self.border_padding,
+                    width=self.reported_width,
+                    border_style=self.border_style_obj,
+                    subtitle="Press ctrl+c to continue",
+                    subtitle_align="left",
+                )
+                self.position += 1
+                return panel
+
+            self.position += 1
+            return rendered_lines
+
+        # Start the background worker thread
+        worker_thread = threading.Thread(target=partial(self.frame_worker, make_next_frame), daemon=True)
+        worker_thread.start()
+
+        # Ensure the queue is full before proceeding
+        while not self.frame_queue.full():
+            time.sleep(0.01)
+
+        with Live(
+            console=console,
+            refresh_per_second=fps,
+            get_renderable=partial(self.get_renderable, make_next_frame),
+        ) as live:
 
             try:
                 while self.animation_running:
@@ -649,70 +700,17 @@ class RichFiglet:
     # I have tried everything I can think of to fix it, but nothing works.
     # I will leave this here for now, but it is not usable in its current state.
 
-    # def horizontal_animation(
-    #     self,
-    #     console: Console,
-    #     rendered_lines: Lines,
-    #     colors: list[Color],
-    #     frame_duration: float,
-    # ):
+    # def make_next_frame() -> Lines:
 
-    #     animation_fps = 1.0 / frame_duration
-    #     self.position = 0
-    #     self.animation_running = True
-    #     rendered_lines.append(Text("\nPress ctrl+c to continue"))
+    #     for i, text_obj in enumerate(rendered_lines):
+    #         if i < len(rendered_lines) - 1:  # dont color the last line
+    #             for j in range(len(text_obj)):
+    #                 # Same index positions across all lines get the same color
+    #                 color_index = (j + self.position) % len(colors)
+    #                 text_obj.stylize(Style(color=colors[color_index]), j, j + 1)
 
-    #     # Create a queue to store pre-rendered frames
-    #     frame_queue: Queue[Lines] = Queue(maxsize=3)
-    #     frame_queue.put(rendered_lines)  # Initial render is the first frame
-
-    #     def make_next_frame() -> Lines:
-
-    #         for i, text_obj in enumerate(rendered_lines):
-    #             if i < len(rendered_lines) - 1:  # dont color the last line
-    #                 for j in range(len(text_obj)):
-    #                     # Same index positions across all lines get the same color
-    #                     color_index = (j + self.position) % len(colors)
-    #                     text_obj.stylize(Style(color=colors[color_index]), j, j + 1)
-
-    #         self.position += 1
-    #         return rendered_lines
-
-    #     # Background worker function to pre-render frames
-    #     def frame_worker():
-    #         while self.animation_running:
-    #             if not frame_queue.full():
-    #                 next_frame = make_next_frame()
-    #                 # self.previous_frame = next_frame
-    #                 frame_queue.put(next_frame)
-    #             else:
-    #                 # Small sleep to prevent CPU hogging when queue is full
-    #                 time.sleep(0.01)
-
-    #     def get_renderable() -> Lines:
-    #         try:
-    #             # Get the next pre-rendered frame from the queue
-    #             return frame_queue.get(block=False)
-    #         except Empty:
-    #             # Safety fallback (shouldn't happen), make a frame on demand
-    #             return make_next_frame()
-
-    #     # Start the background worker thread
-    #     worker_thread = threading.Thread(target=frame_worker, daemon=True)
-    #     worker_thread.start()
-
-    #     while not frame_queue.full():
-    #         time.sleep(0.01)
-
-    #     with Live(console=console, refresh_per_second=animation_fps, get_renderable=get_renderable) as live:
-    #         try:
-    #             while self.animation_running:
-    #                 time.sleep(0.01)  # Keep the main thread alive
-    #         except KeyboardInterrupt:
-    #             live.stop()
-    #         finally:
-    #             self.animation_running = False
-    #             worker_thread.join(timeout=0.5)  # Make sure worker thread terminates
+    #     self.position += 1
+    #     return rendered_lines
 
 
 # Example usage:
@@ -725,12 +723,41 @@ if __name__ == "__main__":
     rich_fig = RichFiglet(
         "Rich is awesome",
         font="ansi_shadow",
-        colors=["#ff0000", "bright_blue", "green"],
-        gradient_dir="vertical",
-        # quality=6,
+        colors=["#ff0000", "bright_blue", "green", "yellow"],
+        # gradient_dir="horizontal",
+        # border="ROUNDED",
+        # border_color="bright_blue",
+        animation_type="smooth_strobe",
+        # quality=15,
         animate=True,
-        # speed=0.2,
+        # fps=1,
         dev_mode=True,
     )
 
     console.print(rich_fig)
+
+    # IMPORTANT NOTES:
+    # Why is there a border argument in the RichFiglet constructor?
+    # -----------------------------------------------------------------------------
+    # There are several reasons that placing a border on the RichFiglet after
+    # creating it will cause problems.
+    # 1. The RichFiglet cannot account for the border size when rendering.
+    #   This will create a problem where if the RichFiglet's width happens to be e
+    #   close to the width of the terminal (using up almost all of its available space),
+    #   the border will destroy the render and make it look jumbled.
+    #   By adding the border into the constructor, the RichFiglet can account for the
+    #   extra space needed by the border and padding when it calculates the available
+    #   space it has to render.
+    # 2. You cannot add a border onto a Live object after it has been created.
+    #   The Live object needs to be the top-level renderable. If you try to add a border
+    #   after the Live object has been created, it will not work and will usually
+    #   crash the program.
+    #   If you want a border while animating, the panel object has to go inside
+    #   the Live object. That is why the RichFiglet provides a border argument in
+    #   the constructor. It will include the border itself as part of its animation.
+
+    # panel = Panel(          # <-- This will cause issues and is not recommended.
+    #     rich_fig,
+    #     padding=(1, 4),
+    # )
+    # console.print(panel)

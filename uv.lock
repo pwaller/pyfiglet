@@ -331,8 +331,10 @@ wheels = [
 [[package]]
 name = "rich-pyfiglet"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
+    { name = "click", version = "8.1.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "click", version = "8.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "rich" },
 ]
 
@@ -346,7 +348,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "rich", specifier = ">=14.0.0" }]
+requires-dist = [
+    { name = "click", specifier = ">=8.1.8" },
+    { name = "rich", specifier = ">=14.0.0" },
+]
 
 [package.metadata.requires-dev]
 dev = [

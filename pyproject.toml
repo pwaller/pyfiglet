@@ -27,6 +27,7 @@ classifiers = [
 
 requires-python = ">=3.8.1"
 dependencies = [
+    "click>=8.1.8",
     "rich>=14.0.0",
 ]
 
@@ -34,12 +35,12 @@ dependencies = [
 Repository = "https://github.com/edward-jazzhands/rich-pyfiglet"
 Changelog = "https://github.com/edward-jazzhands/rich-pyfiglet/blob/master/Changelog.md"
 
-# [project.scripts]
-# rich-pyfiglet = "rich-pyfiglet.cli:main"
+[project.scripts]
+rich-pyfiglet = "rich_pyfiglet.cli:main"
 
-# [build-system]
-# requires = ["hatchling"]
-# build-backend = "hatchling.build"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 110
