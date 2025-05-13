@@ -22,11 +22,11 @@ make-list:
 
 # Runs ruff, exits with 0 if no issues are found
 lint:
-	uv run ruff check . || (echo "Ruff found issues. Please address them." && exit 1)
+	uv run ruff check src || (echo "Ruff found issues. Please address them." && exit 1)
 
 # Runs mypy, exits with 0 if no issues are found
 typecheck:
-	uv run mypy . || (echo "Mypy found issues. Please address them." && exit 1)
+	uv run mypy src || (echo "Mypy found issues. Please address them." && exit 1)
 
 # Runs black
 format:

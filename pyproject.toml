@@ -1,6 +1,6 @@
 [project]
 name = "rich-pyfiglet"
-version = "0.1.0"
+version = "0.1.1"
 description = "A library that wraps PyFiglet with the Rich library for rendering ASCII art in the terminal."
 readme = "README.md"
 authors = [
@@ -44,9 +44,16 @@ build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 110
+exclude = '''
+.*/src/rich_pyfiglet/pyfiglet(/.*)?
+'''
+
+[tool.ruff]
+exclude = ["src/rich_pyfiglet/pyfiglet"]
 
 [tool.mypy]
 python_version = "3.10"
+exclude = 'src/rich_pyfiglet/pyfiglet(/.*)?'
 pretty = true
 strict = true
 
@@ -54,5 +61,6 @@ strict = true
 dev = [
     "black>=24.8.0",
     "mypy>=1.14.1",
+    "pytest>=8.3.5",
     "ruff>=0.11.9",
 ]

@@ -1,5 +1,13 @@
 """Module for the RichPyFiglet class"""
 
+# ~ Type Checking (Pyright and MyPy) - Strict Mode
+# ~ Linting - Ruff
+# ~ Formatting - Black - max 110 characters / line
+
+# Note that PyFiglet itself is not type checked. The type checking only
+# applies to the RichPyFiglet section of the code. There is one ignore
+# statement due to calling an untyped function from PyFiglet.
+
 from __future__ import annotations
 from typing import get_args, Literal, Callable
 import os
@@ -21,7 +29,6 @@ from rich_pyfiglet.pyfiglet import Figlet
 from rich_pyfiglet.pyfiglet.fonts import ALL_FONTS
 from rich_pyfiglet.box_constants import BOX_STYLES, BOXES
 
-GRADIENT_DIRECTIONS = Literal["horizontal", "vertical"]
 ANIMATION_TYPE = Literal["gradient_up", "gradient_down", "smooth_strobe", "fast_strobe"]
 
 
@@ -33,11 +40,10 @@ class RichFiglet:
         font: ALL_FONTS = "standard",
         width: int | None = None,
         colors: list[str] | None = None,
-        gradient_dir: GRADIENT_DIRECTIONS = "vertical",
+        horizontal: bool = False,
         quality: int | None = None,
-        animate: bool = False,
-        animation_type: ANIMATION_TYPE = "gradient_down",
-        fps: float = 5.0,
+        animation: ANIMATION_TYPE | None = None,
+        fps: float | None = None,
         remove_blank_lines: bool = False,
         border: BOX_STYLES | None = None,
         border_padding: tuple[int, int] = (1, 2),
@@ -53,9 +59,7 @@ class RichFiglet:
             colors: A list of colors to use for gradients or animations. Each color can be a name, hex code,
                 or RGB triplet. If None, no gradient or animation will be applied. For available named colors,
                 see: https://rich.readthedocs.io/en/stable/appendix/colors.html
-            gradient_dir: The direction of the gradient. Can be 'vertical' or 'horizontal'.
-                Vertical can be used in combination with the 'gradient' animation mode.
-                Note that if `animation_type` is set to strobe, the gradient_dir setting will be ignored.
+            horizontal: Make the gradient render horizontally . This will be ignored if `animate` is True.
             quality: The number of steps to blend between two colors. Defaults to None, which enables
                 auto mode. Auto mode sets the quality based on the width or height of the rendered banner.
                 One exception: if `animate` is True and `animation_type` is 'smooth_strobe',
@@ -67,7 +71,7 @@ class RichFiglet:
                 - 'gradient_down': The Color gradient will flow vertically across the banner downwards.
                 - 'smooth_strobe': The entire banner will smoothly transition between colors
                 - 'fast_strobe': The entire banner will hard switch to the next color.
-                                 Recommended to lower the FPS to avoid giving people seizures.
+                Recommended to lower the FPS to avoid giving people seizures.
             fps: Frames per second for the animation. This is a float so that you can set it to values
                 such as 0.5 if you desire.
             remove_blank_lines: When True, all blank lines from the inside of the rendered ASCII art
@@ -90,26 +94,20 @@ class RichFiglet:
             raise ValueError("Text cannot be empty. Please provide a valid text string.")
         if font not in get_args(ALL_FONTS):
             raise ValueError(f"Font {font} is not in the fonts folder.")
-        if gradient_dir not in ["vertical", "horizontal"]:
-            raise ValueError("Gradient direction must be 'vertical' or 'horizontal'.")
-        if animate and (colors is None or len(colors) < 2):
+        if animation and (colors is None or len(colors) < 2):
             raise ValueError("At least two colors are required for animation.")
-        if animate and fps <= 0:
+        if animation and fps and fps <= 0:
             raise ValueError("Frames per second must be greater than 0.")
         if quality and (colors is None or len(colors) < 2):
             raise ValueError("At least two colors are required to set a gradient quality.")
         if quality and quality < 2:
             raise ValueError("Gradient Quality must be 2 or higher.")
-        if animation_type not in ["gradient_up", "gradient_down", "smooth_strobe", "fast_strobe"]:
+        if animation and animation not in ["gradient_up", "gradient_down", "smooth_strobe", "fast_strobe"]:
             raise ValueError(
                 "Animation type must be 'gradient_up', 'gradient_down', 'smooth_strobe', or 'fast_strobe'."
             )
-        if animate and gradient_dir == "horizontal" and animation_type in ["gradient_up", "gradient_down"]:
-            raise ValueError(
-                "Animation is unfortunately not supported with horizontal gradients. "
-                "(I tried to make it work, but it was far too glitchy. PRs welcome.)"
-            )
 
+        terminal_width = None
         if width:
             # Pyright complains if I use 'if isinstance(width, int)' here.
             assert isinstance(width, int), "Width must be an integer."
@@ -119,10 +117,9 @@ class RichFiglet:
             terminal_width = self.get_terminal_width()
             if terminal_width:
                 width = (terminal_width - (border_padding[1] * 2) - 2) if border else terminal_width
-                print(f"Terminal width: {terminal_width}")
-                print(f"Target Width: {width}")
                 # terminal_width-(border_padding[1]*2)-2    This subtracts the left/right padding
                 # and border from our available space in which we can render the text.
+
             else:
                 width = 60  # Fallback width
 
@@ -131,23 +128,26 @@ class RichFiglet:
         self.text = text
         self.font = font
         self.colors = colors
-        self.gradient_dir = gradient_dir
-        self.animate = animate
-        self.animation_type = animation_type
+        self.horizontal = horizontal
+        self.animation = animation
         self.quality = quality
         self.border = border
         self.border_padding = border_padding
         self.border_color = border_color
-        self.fps = fps
         self.remove_blank_lines = remove_blank_lines
         self.animation_running = False
         self.dev_mode = dev_mode
         user_set_quality = False
         if quality:
             user_set_quality = True
-        if animate:
+        if animation:
             # Queue to store pre-rendered frames
             self.frame_queue: Queue[Lines | Panel] = Queue(maxsize=3)
+
+        if animation == "fast_strobe":
+            self.fps = fps if fps else 1.5  # default for fast strobe is lower
+        else:
+            self.fps = fps if fps else 5.0
 
         self.gradient: list[Color] = []
         parsed_colors: list[Color] = []
@@ -161,8 +161,8 @@ class RichFiglet:
                 color_obj = self.parse_color(color)
                 parsed_colors.append(color_obj)
             if self.dev_mode:
-                for i, color in enumerate(parsed_colors):
-                    print(f"Color {i+1}: {color}")
+                for parsed_color in parsed_colors:
+                    print(f"Color: {parsed_color}")
 
         self.border_style_obj: str | Style = "none"
         if border_color:
@@ -174,7 +174,7 @@ class RichFiglet:
         # ~ Render Figlet ~ #
         #####################
 
-        self.figlet = Figlet(font=font, width=width)  # ~ <-- Create the Figlet object
+        self.figlet = Figlet(font=font, width=width)  # type: ignore[no-untyped-call]
         self.render_str = self.figlet.renderText(text)
         rendered_strings_list = self.render_str.splitlines()
 
@@ -217,6 +217,7 @@ class RichFiglet:
         added_by_border = 2 if border else 0
         self.reported_width = width_foo + (self.border_padding[1] * 2) + added_by_border
         if self.dev_mode:
+            print(f"Terminal width: {terminal_width}")
             print(f"Width: {self.reported_width}")
             print(f"Height: {len(rendered_strings_list)}")
 
@@ -225,6 +226,7 @@ class RichFiglet:
         #####################################
 
         if len(parsed_colors) == 0:
+            # If there's no colors, we don't need to do anything else.
             return
 
         elif len(parsed_colors) == 1:
@@ -233,14 +235,13 @@ class RichFiglet:
             return
 
         elif len(parsed_colors) > 1:
-            self.color = None
 
-            if not animate or (animate and animation_type in ["gradient_up", "gradient_down"]):
+            if not animation or animation in ["gradient_up", "gradient_down"]:
 
-                num_of_gradients = len(parsed_colors) - 1
-                if gradient_dir == "vertical":
+                num_of_gradients = len(parsed_colors) - 1  # 2 colors would mean 1 transition.
+                if animation or not self.horizontal:
                     quality_float = quality if quality else len(rendered_strings_list) / num_of_gradients
-                else:  # gradient_dir == "horizontal":
+                else:  # horizontal:
                     quality_float = (
                         quality if quality else len(max(rendered_strings_list, key=len)) / num_of_gradients
                     )
@@ -264,9 +265,9 @@ class RichFiglet:
                 if self.dev_mode:
                     print(f"Colors in gradient before leftover: {len(self.gradient)}")
 
-                if gradient_dir == "vertical":
+                if animation or not self.horizontal:
                     leftover = len(self.rendered_lines) - len(self.gradient)
-                else:  # gradient_dir is "horizontal":
+                else:  # horizontal:
                     leftover = len(max(rendered_strings_list, key=len)) - len(self.gradient)
 
                 if not user_set_quality:
@@ -283,14 +284,14 @@ class RichFiglet:
                 if self.dev_mode:
                     print(f"Colors in gradient after looping: {len(self.gradient)}")
 
-                if gradient_dir == "vertical":
+                if animation or not self.horizontal:
                     self.rendered_with_colors = self.build_with_gradient("vertical")
-                else:  # gradient_dir == "horizontal":
+                else:  # horizontal:
                     self.rendered_with_colors = self.build_with_gradient("horizontal")
 
             else:  # Animating and animation mode is smooth_strobe or fast_strobe
 
-                if animation_type == "smooth_strobe":
+                if animation == "smooth_strobe":
                     quality = quality if quality else 10
 
                     for i in range(len(parsed_colors) - 1):  # stop at second to last color because of [i + 1]
@@ -321,15 +322,13 @@ class RichFiglet:
     # ~ Utility Functions ~ #
     #########################
 
-    def get_terminal_width(
-        self,
-    ) -> int | None:
+    def get_terminal_width(self) -> int | None:
         """Get the terminal size."""
         try:
             size = os.get_terminal_size()
             return size.columns
         except Exception:
-            pass
+            return None
 
     def parse_color(self, color: str) -> Color:
         try:
@@ -400,6 +399,9 @@ class RichFiglet:
                     # start at j, end at j + 1 - this is another way of saying "only color at j"
                     line.stylize(Style(color=self.gradient[color_index]), j, j + 1)
 
+        else:
+            raise ValueError("Invalid gradient direction. Must be 'vertical' or 'horizontal'.")
+
         return rendered_with_colors
 
     ###########################
@@ -408,7 +410,7 @@ class RichFiglet:
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
 
-        if not self.animate:
+        if not self.animation:
 
             if self.gradient:
                 if self.border:
@@ -439,11 +441,11 @@ class RichFiglet:
 
         else:  # animate is True:
 
-            if self.animation_type in ["gradient_up", "gradient_down"]:
+            if self.animation in ["gradient_up", "gradient_down"]:
                 self.vertical_animation(console, self.rendered_with_colors, self.gradient, self.fps)
-            elif self.animation_type == "smooth_strobe":
+            elif self.animation == "smooth_strobe":
                 self.smooth_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
-            elif self.animation_type == "fast_strobe":
+            elif self.animation == "fast_strobe":
                 self.fast_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
 
     def __rich_measure__(self, console: Console, options: ConsoleOptions) -> Measurement:
@@ -454,7 +456,7 @@ class RichFiglet:
     ###########################
 
     # Background worker function to pre-render frames
-    def frame_worker(self, next_frame_callable: Callable[[], Lines | Panel]):
+    def frame_worker(self, next_frame_callable: Callable[[], Lines | Panel]) -> None:
         while self.animation_running:
             if not self.frame_queue.full():
                 next_frame = next_frame_callable()
@@ -478,7 +480,7 @@ class RichFiglet:
         rendered_lines: Lines,
         colors: list[Color],
         fps: float,
-    ):
+    ) -> None:
         self.position = 0
         self.animation_running = True
         if not self.border:
@@ -512,13 +514,13 @@ class RichFiglet:
                     subtitle="Press ctrl+c to continue",
                     subtitle_align="left",
                 )
-                if self.animation_type == "gradient_up":
+                if self.animation == "gradient_up":
                     self.position += 1
                 else:  # gradient_down
                     self.position -= 1
                 return panel
 
-            if self.animation_type == "gradient_up":
+            if self.animation == "gradient_up":
                 self.position += 1
             else:  # gradient_down
                 self.position -= 1
@@ -559,7 +561,7 @@ class RichFiglet:
         rendered_lines: Lines,
         colors: list[Color],
         fps: float,
-    ):
+    ) -> None:
         self.position = 0
         self.animation_running = True
         if not self.border:
@@ -629,7 +631,7 @@ class RichFiglet:
         rendered_lines: Lines,
         colors: list[Color],
         fps: float,
-    ):
+    ) -> None:
         self.position = 0
         self.animation_running = True
         if not self.border:
@@ -721,17 +723,16 @@ if __name__ == "__main__":
     console = Console()
 
     rich_fig = RichFiglet(
-        "Rich is awesome",
+        "Rich - PyFiglet",
         font="ansi_shadow",
-        colors=["#ff0000", "bright_blue", "green", "yellow"],
-        # gradient_dir="horizontal",
-        # border="ROUNDED",
-        # border_color="bright_blue",
-        animation_type="smooth_strobe",
+        colors=["#ff0000", "magenta1", "cyan"],
+        # horizontal=True,
+        animation="gradient_down",
+        border="ROUNDED",
+        border_color="magenta1",
         # quality=15,
-        animate=True,
-        # fps=1,
-        dev_mode=True,
+        fps=2,
+        # dev_mode=True,
     )
 
     console.print(rich_fig)
