@@ -64,9 +64,7 @@ class RichFiglet:
                 auto mode. Auto mode sets the quality based on the width or height of the rendered banner.
                 One exception: if `animate` is True and `animation_type` is 'smooth_strobe',
                 auto mode will default to 10 steps per gradient.
-            animate: Whether to animate the text. Requires at least two colors.
-                Note that animation is unfortunately not supported with horizontal gradients.
-            animation_type:
+            animation:
                 - 'gradient_up': The Color gradient will flow vertically across the banner upwards.
                 - 'gradient_down': The Color gradient will flow vertically across the banner downwards.
                 - 'smooth_strobe': The entire banner will smoothly transition between colors
