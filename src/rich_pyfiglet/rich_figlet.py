@@ -283,9 +283,9 @@ class RichFiglet:
                     print(f"Colors in gradient after looping: {len(self.gradient)}")
 
                 if animation or not self.horizontal:
-                    self.rendered_with_colors = self.build_with_gradient("vertical")
+                    self.rendered_with_colors = self._build_with_gradient("vertical")
                 else:  # horizontal:
-                    self.rendered_with_colors = self.build_with_gradient("horizontal")
+                    self.rendered_with_colors = self._build_with_gradient("horizontal")
 
             else:  # Animating and animation mode is smooth_strobe or fast_strobe
 
@@ -321,7 +321,10 @@ class RichFiglet:
     #########################
 
     def get_terminal_width(self) -> int | None:
-        """Get the terminal size."""
+        """Get the terminal size.
+
+        Returns:
+            The width of the terminal in characters, or None if it cannot be determined."""
         try:
             size = os.get_terminal_size()
             return size.columns
@@ -329,6 +332,13 @@ class RichFiglet:
             return None
 
     def parse_color(self, color: str) -> Color:
+        """Parse a color string into a Color object.
+
+        Args:
+            color: The color string to parse. Can be a name, hex code, or RGB triplet.
+
+        Returns:
+            A Rich Color object representing the parsed color."""
         try:
             color2_obj = Color.parse(color)  # Check if the color is valid
         except Exception as e:
@@ -346,8 +356,7 @@ class RichFiglet:
             steps: Number of colors in the gradient
 
         Returns:
-            List of Color objects representing the gradient
-        """
+            A list of Rich Color objects representing the gradient."""
         if steps <= 1:
             raise ValueError("Number of steps must be greater than 1.")
 
@@ -378,7 +387,11 @@ class RichFiglet:
         # starting at 0 and ending at 1. For example, if steps is 5, the values would be:
         # 0.0, 0.25, 0.5, 0.75, 1.0 (notice dividing by 4, to make 5 steps).
 
-    def build_with_gradient(self, gradient_dir: str) -> Lines:
+    ###########################
+    # ~ Rendering Functions ~ #
+    ###########################
+
+    def _build_with_gradient(self, gradient_dir: str) -> Lines:
 
         rendered_with_colors = self.rendered_lines
 
@@ -401,10 +414,6 @@ class RichFiglet:
             raise ValueError("Invalid gradient direction. Must be 'vertical' or 'horizontal'.")
 
         return rendered_with_colors
-
-    ###########################
-    # ~ Rendering Functions ~ #
-    ###########################
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> RenderResult:
 
@@ -440,11 +449,11 @@ class RichFiglet:
         else:  # animate is True:
 
             if self.animation in ["gradient_up", "gradient_down"]:
-                self.vertical_animation(console, self.rendered_with_colors, self.gradient, self.fps)
+                self._vertical_animation(console, self.rendered_with_colors, self.gradient, self.fps)
             elif self.animation == "smooth_strobe":
-                self.smooth_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
+                self._smooth_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
             elif self.animation == "fast_strobe":
-                self.fast_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
+                self._fast_strobe_animation(console, self.rendered_lines, self.gradient, self.fps)
 
     def __rich_measure__(self, console: Console, options: ConsoleOptions) -> Measurement:
         return Measurement(self.reported_width, options.max_width)
@@ -454,7 +463,7 @@ class RichFiglet:
     ###########################
 
     # Background worker function to pre-render frames
-    def frame_worker(self, next_frame_callable: Callable[[], Lines | Panel]) -> None:
+    def _frame_worker(self, next_frame_callable: Callable[[], Lines | Panel]) -> None:
         while self.animation_running:
             if not self.frame_queue.full():
                 next_frame = next_frame_callable()
@@ -464,7 +473,7 @@ class RichFiglet:
                 # Small sleep to prevent CPU hogging when queue is full
                 time.sleep(0.01)
 
-    def get_renderable(self, next_frame_callable: Callable[[], Lines | Panel]) -> Lines | Panel:
+    def _get_renderable(self, next_frame_callable: Callable[[], Lines | Panel]) -> Lines | Panel:
         try:
             # Get the next pre-rendered frame from the queue
             return self.frame_queue.get(block=False)
@@ -472,7 +481,7 @@ class RichFiglet:
             # Safety fallback (shouldn't happen), make a frame on demand
             return next_frame_callable()
 
-    def vertical_animation(
+    def _vertical_animation(
         self,
         console: Console,
         rendered_lines: Lines,
@@ -525,7 +534,7 @@ class RichFiglet:
             return rendered_lines
 
         # Start the background worker thread
-        worker_thread = threading.Thread(target=partial(self.frame_worker, make_next_frame), daemon=True)
+        worker_thread = threading.Thread(target=partial(self._frame_worker, make_next_frame), daemon=True)
         worker_thread.start()
 
         # Ensure the queue is full before proceeding
@@ -535,14 +544,14 @@ class RichFiglet:
         with Live(
             console=console,
             refresh_per_second=fps,
-            get_renderable=partial(self.get_renderable, make_next_frame),
+            get_renderable=partial(self._get_renderable, make_next_frame),
         ) as live:
 
             try:
                 while self.animation_running:
                     time.sleep(0.1)  # Keep the main thread alive
 
-                    # The Live object runs its own loop in a separate thread to call get_renderable.
+                    # The Live object runs its own loop in a separate thread to call _get_renderable.
                     # The main thread needs to stay alive for the animation to continue.
                     # This sleep does not control animation speed. It's just to prevent
                     # the while loop from spinning at 100% CPU.
@@ -553,7 +562,7 @@ class RichFiglet:
                 self.animation_running = False
                 worker_thread.join(timeout=0.5)  # Make sure worker thread terminates
 
-    def smooth_strobe_animation(
+    def _smooth_strobe_animation(
         self,
         console: Console,
         rendered_lines: Lines,
@@ -595,7 +604,7 @@ class RichFiglet:
             return rendered_lines
 
         # Start the background worker thread
-        worker_thread = threading.Thread(target=partial(self.frame_worker, make_next_frame), daemon=True)
+        worker_thread = threading.Thread(target=partial(self._frame_worker, make_next_frame), daemon=True)
         worker_thread.start()
 
         # Ensure the queue is full before proceeding
@@ -605,14 +614,14 @@ class RichFiglet:
         with Live(
             console=console,
             refresh_per_second=fps,
-            get_renderable=partial(self.get_renderable, make_next_frame),
+            get_renderable=partial(self._get_renderable, make_next_frame),
         ) as live:
 
             try:
                 while self.animation_running:
                     time.sleep(0.1)  # Keep the main thread alive
 
-                    # The Live object runs its own loop in a separate thread to call get_renderable.
+                    # The Live object runs its own loop in a separate thread to call _get_renderable.
                     # The main thread needs to stay alive for the animation to continue.
                     # This sleep does not control animation speed. It's just to prevent
                     # the while loop from spinning at 100% CPU.
@@ -623,7 +632,7 @@ class RichFiglet:
                 self.animation_running = False
                 worker_thread.join(timeout=0.5)  # Make sure worker thread terminates
 
-    def fast_strobe_animation(
+    def _fast_strobe_animation(
         self,
         console: Console,
         rendered_lines: Lines,
@@ -665,7 +674,7 @@ class RichFiglet:
             return rendered_lines
 
         # Start the background worker thread
-        worker_thread = threading.Thread(target=partial(self.frame_worker, make_next_frame), daemon=True)
+        worker_thread = threading.Thread(target=partial(self._frame_worker, make_next_frame), daemon=True)
         worker_thread.start()
 
         # Ensure the queue is full before proceeding
@@ -675,14 +684,14 @@ class RichFiglet:
         with Live(
             console=console,
             refresh_per_second=fps,
-            get_renderable=partial(self.get_renderable, make_next_frame),
+            get_renderable=partial(self._get_renderable, make_next_frame),
         ) as live:
 
             try:
                 while self.animation_running:
                     time.sleep(0.1)  # Keep the main thread alive
 
-                    # The Live object runs its own loop in a separate thread to call get_renderable.
+                    # The Live object runs its own loop in a separate thread to call _get_renderable.
                     # The main thread needs to stay alive for the animation to continue.
                     # This sleep does not control animation speed. It's just to prevent
                     # the while loop from spinning at 100% CPU.
@@ -711,52 +720,3 @@ class RichFiglet:
 
     #     self.position += 1
     #     return rendered_lines
-
-
-# Example usage:
-if __name__ == "__main__":
-
-    from rich.console import Console
-
-    console = Console()
-
-    rich_fig = RichFiglet(
-        "Rich - PyFiglet",
-        font="ansi_shadow",
-        colors=["#ff0000", "magenta1", "cyan"],
-        # horizontal=True,
-        animation="gradient_down",
-        border="ROUNDED",
-        border_color="magenta1",
-        # quality=15,
-        fps=2,
-        # dev_mode=True,
-    )
-
-    console.print(rich_fig)
-
-    # IMPORTANT NOTES:
-    # Why is there a border argument in the RichFiglet constructor?
-    # -----------------------------------------------------------------------------
-    # There are several reasons that placing a border on the RichFiglet after
-    # creating it will cause problems.
-    # 1. The RichFiglet cannot account for the border size when rendering.
-    #   This will create a problem where if the RichFiglet's width happens to be e
-    #   close to the width of the terminal (using up almost all of its available space),
-    #   the border will destroy the render and make it look jumbled.
-    #   By adding the border into the constructor, the RichFiglet can account for the
-    #   extra space needed by the border and padding when it calculates the available
-    #   space it has to render.
-    # 2. You cannot add a border onto a Live object after it has been created.
-    #   The Live object needs to be the top-level renderable. If you try to add a border
-    #   after the Live object has been created, it will not work and will usually
-    #   crash the program.
-    #   If you want a border while animating, the panel object has to go inside
-    #   the Live object. That is why the RichFiglet provides a border argument in
-    #   the constructor. It will include the border itself as part of its animation.
-
-    # panel = Panel(          # <-- This will cause issues and is not recommended.
-    #     rich_fig,
-    #     padding=(1, 4),
-    # )
-    # console.print(panel)
