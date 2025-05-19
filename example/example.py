@@ -5,14 +5,14 @@ console = Console()
 
 rich_fig = RichFiglet(
     "Rich - PyFiglet",
-    font="ansi_shadow",
-    colors=["#ff0000", "magenta1", "cyan"],
+    font="pagga_lite",
+    colors=["#ff0000", "magenta1"],
     # horizontal=True,
     animation="gradient_down",
     border="ROUNDED",
     border_color="magenta1",
     # quality=15,
-    fps=2,
+    fps=5,
     # dev_mode=True,
 )
 

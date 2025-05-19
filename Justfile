@@ -14,7 +14,7 @@ install:
 	
 # Run the small example script
 run-ex:
-	uv run src/rich_pyfiglet/rich_figlet.py
+	uv run example/example.py
 
 # Run the script to generate the fonts list.
 make-list:

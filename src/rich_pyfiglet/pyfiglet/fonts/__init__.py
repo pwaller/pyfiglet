@@ -1,4 +1,4 @@
-"Fonts module for textual_pyfiglet."
+"Fonts module for rich_pyfiglet."
 
 from typing import Literal 
 
@@ -156,6 +156,7 @@ ALL_FONTS = Literal[
 "dos_rebel",
 "dotmatrix",
 "double",
+"double_blocky",
 "double_shorts",
 "drpepper",
 "druid___",
