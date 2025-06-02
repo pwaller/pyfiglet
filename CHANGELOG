@@ -1,3 +1,14 @@
+# 2025-06-02 1.0.3
+
+  The significant change in this release is to introduce type hinting (#147).
+
+  * #133 Fix typos in README.md by @gl-yziquel
+  * #135 __init__.py: Fix a tiny typo in a comment by @gregorni
+  * #136 Update README.md by @aminsoheyli
+  * #137 Tests : Use slant instead of doh to use only fonts-contrib by @LyesSaadi
+  * #140 Added: Double-Blocky Font by @CatPieLeaf
+  * #147 Big type hinting and modernization upgrade by @edward-jazzhands
+
 # 2023-09-13 1.0.2
 
   This release fixes a leaked file descriptor.
