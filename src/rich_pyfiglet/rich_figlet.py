@@ -4,10 +4,6 @@
 # ~ Linting - Ruff
 # ~ Formatting - Black - max 110 characters / line
 
-# Note that PyFiglet itself is not type checked. The type checking only
-# applies to the RichPyFiglet section of the code. There is one ignore
-# statement due to calling an untyped function from PyFiglet.
-
 from __future__ import annotations
 from typing import get_args, Literal, Callable
 import os
@@ -172,7 +168,7 @@ class RichFiglet:
         # ~ Render Figlet ~ #
         #####################
 
-        self.figlet = Figlet(font=font, width=width)  # type: ignore[no-untyped-call]
+        self.figlet = Figlet(font=font, width=width)
         self.render_str = self.figlet.renderText(text)
         rendered_strings_list = self.render_str.splitlines()
 

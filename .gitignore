@@ -6,7 +6,7 @@
 /dist/
 /pyfiglet.egg-info/
 env*/
-/.venv/
+.venv/
 *_cache/
 links.txt
 /sandbox/

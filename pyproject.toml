@@ -1,6 +1,6 @@
 [project]
 name = "rich-pyfiglet"
-version = "0.1.3"
+version = "0.1.4"
 description = "A library that wraps PyFiglet with the Rich library for rendering ASCII art in the terminal."
 readme = "README.md"
 authors = [
@@ -59,6 +59,7 @@ strict = true
 
 [dependency-groups]
 dev = [
+    "basedpyright>=1.29.2",
     "black>=24.8.0",
     "mypy>=1.14.1",
     "pytest>=8.3.5",

@@ -1,9 +1,8 @@
-# Run the CLI with defined entry command
-run:
+help:
 	@echo "-------------------"
 	@echo " rich-pyfiglet CLI"
 	@echo "-------------------"
-	@echo "Use 'run-ex' to run the example script."
+	@echo "Use 'just run-ex' to run the example script."
 	@echo "For info on the CLI, use 'rich-pyfiglet --help'"
 	@echo "If using uv, that would be 'uv run rich-pyfiglet --help'"
 	@echo
