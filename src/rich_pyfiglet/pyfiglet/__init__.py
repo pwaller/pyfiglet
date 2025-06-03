@@ -8,7 +8,8 @@ Original by Peter Waller and various contributors.
 Modifications by Edward Jazzhands for Rich-Pyfiglet.
 """
 
-from __future__ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals, annotations
+from typing import Any, Optional
 
 import itertools
 import importlib.resources
@@ -95,12 +96,12 @@ else:
     SHARED_DIRECTORY = "/usr/local/share/pyfiglet/"
 
 
-def figlet_format(text, font=DEFAULT_FONT, **kwargs):
+def figlet_format(text:str, font:str=DEFAULT_FONT, **kwargs:Any):
     fig = Figlet(font, **kwargs)
     return fig.renderText(text)
 
 
-def print_figlet(text, font=DEFAULT_FONT, colors=":", **kwargs):
+def print_figlet(text:str, font:str=DEFAULT_FONT, colors:str=":", **kwargs:Any):
     ansiColors = parse_color(colors)
     if ansiColors:
         sys.stdout.write(ansiColors)
@@ -113,7 +114,7 @@ def print_figlet(text, font=DEFAULT_FONT, colors=":", **kwargs):
 
 
 class FigletError(Exception):
-    def __init__(self, error):
+    def __init__(self, error:str):
         self.error = error
 
     def __str__(self):
@@ -153,27 +154,27 @@ class FigletFont(object):
     reMagicNumber = re.compile(r"^[tf]lf2.")
     reEndMarker = re.compile(r"(.)\s*$")
 
-    def __init__(self, font=DEFAULT_FONT):
+    def __init__(self, font:str=DEFAULT_FONT):
         self.font = font
 
-        self.comment = ""
-        self.chars = {}
-        self.width = {}
+        self.comment = ''
+        self.chars: dict[int, list[str]] = {}
+        self.width: dict[int, int] = {}
         self.data = self.preloadFont(font)
         self.loadFont()
 
     @classmethod
-    def preloadFont(cls, font):
+    def preloadFont(cls, font:str):
         """
         Load font data if exist
         """
         # Find a plausible looking font file.
         data = None
         font_path = None
-        for extension in ("tlf", "flf"):
-            fn = "%s.%s" % (font, extension)
-            path = importlib.resources.files("rich_pyfiglet.pyfiglet.fonts").joinpath(fn)
-            if path.exists():
+        for extension in ('tlf', 'flf'):
+            fn = '%s.%s' % (font, extension)
+            path = importlib.resources.files('pyfiglet.fonts').joinpath(fn)
+            if path.exists():   # type: ignore
                 font_path = path
                 break
             else:
@@ -202,8 +203,8 @@ class FigletFont(object):
             raise FontNotFound(font)
 
     @classmethod
-    def isValidFont(cls, font):
-        if not font.endswith((".flf", ".tlf")):
+    def isValidFont(cls, font:str):
+        if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
         full_file = os.path.join(SHARED_DIRECTORY, font)
@@ -238,14 +239,13 @@ class FigletFont(object):
         ]
 
     @classmethod
-    def infoFont(cls, font, short=False):
+    def infoFont(cls, font:str, short:bool=False):
         """
         Get information of font
         """
         data = FigletFont.preloadFont(font)
-        infos = []
-        reStartMarker = re.compile(
-            r"""
+        infos: list[str] = []
+        reStartMarker = re.compile(r"""
             ^(FONT|COMMENT|FONTNAME_REGISTRY|FAMILY_NAME|FOUNDRY|WEIGHT_NAME|
               SETWIDTH_NAME|SLANT|ADD_STYLE_NAME|PIXEL_SIZE|POINT_SIZE|
               RESOLUTION_X|RESOLUTION_Y|SPACING|AVERAGE_WIDTH|
@@ -264,7 +264,7 @@ class FigletFont(object):
         return "\n".join(infos) if not short else infos[0]
 
     @staticmethod
-    def installFonts(file_name):
+    def installFonts(file_name:str):
         """
         Install the specified font file to this system.
         """
@@ -318,7 +318,8 @@ class FigletFont(object):
                 raise FontError("malformed header for %s" % self.font)
 
             hardBlank = header[0]
-            height, baseLine, maxLength, oldLayout, commentLines = map(int, header[1:6])
+            height, baseLine, maxLength, oldLayout, commentLines = map( # type: ignore
+                int, header[1:6])
             printDirection = fullLayout = None
 
             # these are all optional for backwards compat
@@ -348,19 +349,19 @@ class FigletFont(object):
             for i in range(0, commentLines):
                 self.comment += data.pop(0)
 
-            def __char(data):
+            def __char(data: list[str]) -> tuple[int, list[str]]:
                 """
                 Function loads one character in the internal array from font
                 file content
                 """
                 end = None
                 width = 0
-                chars = []
-                for j in range(0, height):
+                chars: list[str] = []
+                for _ in range(0, height):
                     line = data.pop(0)
                     if end is None:
-                        end = self.reEndMarker.search(line).group(1)
-                        end = re.compile(re.escape(end) + r"{1,2}\s*$")
+                        end = self.reEndMarker.search(line).group(1)  # type: ignore
+                        end = re.compile(re.escape(end) + r'{1,2}\s*$')
 
                     line = end.sub("", line)
 
@@ -456,15 +457,15 @@ class FigletString(unicode_string):
         "\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff"
     )
 
-    def reverse(self):
-        out = []
+    def reverse(self) -> FigletString:
+        out: list[str] = []
         for row in self.splitlines():
             out.append(row.translate(self.__reverse_map__)[::-1])
 
         return self.newFromList(out)
 
-    def flip(self):
-        out = []
+    def flip(self) -> FigletString:
+        out: list[str] = []
         for row in self.splitlines()[::-1]:
             out.append(row.translate(self.__flip_map__))
 
@@ -472,8 +473,8 @@ class FigletString(unicode_string):
 
     # doesn't do self.strip() because it could remove leading whitespace on first line of the font
     # doesn't do row.strip() because it could remove empty lines within the font character
-    def strip_surrounding_newlines(self):
-        out = []
+    def strip_surrounding_newlines(self) -> str:
+        out: list[str] = []
         chars_seen = False
         for row in self.splitlines():
             # if the row isn't empty or if we're in the middle of the font character, add the line.
@@ -487,8 +488,8 @@ class FigletString(unicode_string):
     def normalize_surrounding_newlines(self):
         return "\n" + self.strip_surrounding_newlines() + "\n"
 
-    def newFromList(self, list):
-        return FigletString("\n".join(list) + "\n")
+    def newFromList(self, list: list[str]):
+        return FigletString('\n'.join(list) + '\n')
 
 
 class FigletRenderingEngine(object):
@@ -497,10 +498,10 @@ class FigletRenderingEngine(object):
     including smushing/kerning/justification/direction
     """
 
-    def __init__(self, base=None):
+    def __init__(self, base:Optional[Figlet]=None):
         self.base = base
 
-    def render(self, text):
+    def render(self, text:str):
         """
         Render an ASCII text string in figlet
         """
@@ -520,10 +521,10 @@ class FigletProduct(object):
     """
 
     def __init__(self):
-        self.queue = list()
+        self.queue: list[list[str]] = list()
         self.buffer_string = ""
 
-    def append(self, buffer):
+    def append(self, buffer: list[str]):
         self.queue.append(buffer)
 
     def getString(self):
@@ -534,8 +535,7 @@ class FigletBuilder(object):
     """
     Represent the internals of the build process
     """
-
-    def __init__(self, text, font, direction, width, justify):
+    def __init__(self, text:str, font:FigletFont, direction:str, width:int, justify:str):
 
         self.text = list(map(ord, list(text)))
         self.direction = direction
@@ -543,15 +543,15 @@ class FigletBuilder(object):
         self.font = font
         self.justify = justify
 
-        self.iterator = 0
-        self.maxSmush = 0
+        self.iterator: int = 0
+        self.maxSmush: int = 0
         self.newBlankRegistered = False
 
-        self.curCharWidth = 0
-        self.prevCharWidth = 0
-        self.currentTotalWidth = 0
+        self.curCharWidth: int = 0
+        self.prevCharWidth: int = 0
+        self.currentTotalWidth: int = 0
 
-        self.blankMarkers = list()
+        self.blankMarkers: list[tuple[list[str], int]] = list()
         self.product = FigletProduct()
         self.buffer = ["" for i in range(self.font.height)]
 
@@ -632,7 +632,7 @@ class FigletBuilder(object):
             string_acc += self.replaceHardblanks(buffer)
         self.product.buffer_string = string_acc
 
-    def getCharAt(self, i):
+    def getCharAt(self, i: int) -> Optional[list[str]]:
         if i < 0 or i >= len(list(self.text)):
             return None
         c = self.text[i]
@@ -642,7 +642,7 @@ class FigletBuilder(object):
         else:
             return self.font.chars[c]
 
-    def getCharWidthAt(self, i):
+    def getCharWidthAt(self, i: int) -> Optional[int]:
         if i < 0 or i >= len(self.text):
             return None
         c = self.text[i]
@@ -651,13 +651,13 @@ class FigletBuilder(object):
         else:
             return self.font.width[c]
 
-    def getCurChar(self):
+    def getCurChar(self) -> Optional[list[str]]:
         return self.getCharAt(self.iterator)
 
     def getCurWidth(self):
         return self.getCharWidthAt(self.iterator)
 
-    def getLeftSmushedChar(self, i, addLeft):
+    def getLeftSmushedChar(self, i:int, addLeft):
         idx = len(addLeft) - self.maxSmush + i
         if idx >= 0 and idx < len(addLeft):
             left = addLeft[idx]
@@ -665,7 +665,7 @@ class FigletBuilder(object):
             left = ""
         return left, idx
 
-    def currentSmushAmount(self, curChar):
+    def currentSmushAmount(self, curChar: list[str]):
         return self.smushAmount(self.buffer, curChar)
 
     def updateSmushedCharInLeftBuffer(self, addLeft, idx, smushed):
@@ -676,7 +676,7 @@ class FigletBuilder(object):
         addLeft = "".join(l)
         return addLeft
 
-    def smushRow(self, curChar, row):
+    def smushRow(self, curChar:list[str], row:int):
         addLeft = self.buffer[row]
         addRight = curChar[row]
 
@@ -690,7 +690,7 @@ class FigletBuilder(object):
             addLeft = self.updateSmushedCharInLeftBuffer(addLeft, idx, smushed)
         return addLeft, addRight
 
-    def addCurCharRowToBufferRow(self, curChar, row):
+    def addCurCharRowToBufferRow(self, curChar:list[str], row:int):
         addLeft, addRight = self.smushRow(curChar, row)
         self.buffer[row] = addLeft + addRight[self.maxSmush :]
 
@@ -704,7 +704,7 @@ class FigletBuilder(object):
             return
         self.maxSmush = self.currentSmushAmount(curChar)
 
-    def cutBufferAtLastBlank(self, saved_buffer, saved_iterator):
+    def cutBufferAtLastBlank(self, saved_buffer, saved_iterator:int):
         self.product.append(saved_buffer)
         self.iterator = saved_iterator
         self.cutBufferCommon()
@@ -714,7 +714,7 @@ class FigletBuilder(object):
         self.iterator -= 1
         self.cutBufferCommon()
 
-    def blankExist(self, last_blank):
+    def blankExist(self, last_blank:int):
         return last_blank != -1
 
     def getLastBlank(self):
@@ -731,8 +731,8 @@ class FigletBuilder(object):
         else:
             self.cutBufferAtLastChar()
 
-    def justifyString(self, justify, buffer):
-        if justify == "right":
+    def justifyString(self, justify:str, buffer:list[str]):
+        if justify == 'right':
             for row in range(0, self.font.height):
                 buffer[row] = (" " * (self.width - len(buffer[row]) - 1)) + buffer[row]
         elif justify == "center":
@@ -740,12 +740,12 @@ class FigletBuilder(object):
                 buffer[row] = (" " * int((self.width - len(buffer[row])) / 2)) + buffer[row]
         return buffer
 
-    def replaceHardblanks(self, buffer):
-        string = "\n".join(buffer) + "\n"
-        string = string.replace(self.font.hardBlank, " ")
+    def replaceHardblanks(self, buffer:list[str]):
+        string = '\n'.join(buffer) + '\n'
+        string = string.replace(self.font.hardBlank, ' ')
         return string
 
-    def smushAmount(self, buffer=[], curChar=[]):
+    def smushAmount(self, buffer:list[str]=[], curChar:list[str]=[]):
         """
         Calculate the amount of smushing we can do between this char and the
         last If this is the first char it will throw a series of exceptions
@@ -795,7 +795,7 @@ class FigletBuilder(object):
 
         return maxSmush
 
-    def smushChars(self, left="", right=""):
+    def smushChars(self, left:str='', right:str=''):
         """
         Given 2 characters which represent the edges rendered figlet
         fonts where they would touch, see if they can be smushed together.
@@ -884,7 +884,8 @@ class Figlet(object):
     Main figlet class.
     """
 
-    def __init__(self, font=DEFAULT_FONT, direction="auto", justify="auto", width=80):
+    def __init__(self, font:str=DEFAULT_FONT, direction:str='auto', justify:str='auto',
+                 width:int=80) -> None:
         self.font = font
         self._direction = direction
         self._justify = justify
@@ -892,24 +893,15 @@ class Figlet(object):
         self.setFont()
         self.engine = FigletRenderingEngine(base=self)
 
-    def setFont(self, **kwargs: Any):
-        if "font" in kwargs:
-            self.font = kwargs["font"]
+    def setFont(self, **kwargs:str) -> None:
+        if 'font' in kwargs:
+            self.font = kwargs['font']
 
         self.Font = FigletFont(font=self.font)
 
-    # * Edward Jazzhands: The direction and justify properties were previously
-    # not using the @property decorator and were not configured to be changeable
-    # in real time. I added the @property decorators and changed them to be
-    # getter and setter methods.
-    # This is not actually needed for Rich-Pyfiglet - it's needed for
-    # Textual-Pyfiglet to allow real-time changes. But since Textual-Pyfiglet
-    # depends on this package, any additions to PyFiglet itself have to be done
-    # in here. NOTE: In the future this should be a PR to PyFiglet itself.
-
     @property
     def direction(self):
-        if self._direction == "auto":
+        if self._direction == 'auto':
             direction = self.Font.printDirection
             if direction == 0:
                 return "left-to-right"
@@ -919,18 +911,18 @@ class Figlet(object):
                 return "left-to-right"
         else:
             return self._direction
-
+        
     @direction.setter
-    def direction(self, value: str):
-        self._direction = value
+    def direction(self, value: str | int):
+        self._direction = value        
 
     @property
     def justify(self):
-        if self._justify == "auto":
-            if self.direction == "left-to-right":
-                return "left"
-            elif self.direction == "right-to-left":
-                return "right"
+        if self._justify == 'auto':
+            if self.direction == 'left-to-right':
+                return 'left'
+            elif self.direction == 'right-to-left':
+                return 'right'
 
         else:
             return self._justify
@@ -939,15 +931,15 @@ class Figlet(object):
     def justify(self, value: str):
         self._justify = value
 
-    def renderText(self, text: str):
+    def renderText(self, text:str) -> FigletString:
         # wrapper method to engine
         return self.engine.render(text)
 
-    def getFonts(self):
+    def getFonts(self) -> list[str]:
         return self.Font.getFonts()
 
 
-def color_to_ansi(color, isBackground):
+def color_to_ansi(color:str, isBackground:bool):
     if not color:
         return ""
     color = color.upper()
@@ -967,7 +959,7 @@ def color_to_ansi(color, isBackground):
     return "\033[{}m".format(ansiCode)
 
 
-def parse_color(color):
+def parse_color(color:str):
     foreground, _, background = color.partition(":")
     ansiForeground = color_to_ansi(foreground, isBackground=False)
     ansiBackground = color_to_ansi(background, isBackground=True)

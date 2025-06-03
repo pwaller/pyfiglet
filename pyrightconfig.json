@@ -1,0 +1,15 @@
+{
+  "include": [
+    "pyfiglet"
+  ],
+
+  "exclude": [
+    "pyfiglet/tests",
+    "pyfiglet/test.py"
+  ],
+  
+  "strict": [
+    "pyfiglet"
+  ],
+
+}
