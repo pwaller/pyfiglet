@@ -1,4 +1,4 @@
-![rich-pyfiglet-banner](https://github.com/user-attachments/assets/b16667f2-4428-4bf5-aad5-5832b5b5da3d)
+![rich-pyfiglet-banner-transparent](https://github.com/user-attachments/assets/4d424957-7846-430e-bb59-b4267453e565)
 
 # Rich-Pyfiglet
 
@@ -11,7 +11,7 @@ Rich-PyFiglet is an implementation of [PyFiglet](https://github.com/pwaller/pyfi
 
 It provides a RichFiglet class that is fully compatible with the Rich API and can be dropped into your Rich scripts.
 
-*This library is the sister library of [Textual-Pyfiglet](https://github.com/edward-jazzhands/textual-pyfiglet).*
+*This library is related to [Textual-Pyfiglet](https://github.com/edward-jazzhands/textual-pyfiglet).*
 
 ## Features
 
@@ -37,7 +37,7 @@ uvx rich-pyfiglet "Rich is awesome" --colors green3:purple -a gradient_down
 or using pipx:
 
 ```sh
-pipx rich-pyfiglet "Rich is awesome" --colors blue1:magenta3 -h
+pipx run rich-pyfiglet "Rich is awesome" --colors blue1:magenta3 -h
 ```
 
 ## Documentation
