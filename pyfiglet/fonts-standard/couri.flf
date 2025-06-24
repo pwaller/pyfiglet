@@ -2510,7 +2510,7 @@ FULL_NAME "Courier Oblique"
  #  # $@
 ######$@
       $@@
--1 circumflex
+0x0302 circumflex
    $@
  ##$@
 # #$@
@@ -2521,7 +2521,7 @@ FULL_NAME "Courier Oblique"
    $@
    $@
    $@@
--2 grave
+0x0300 grave
    $@
 ## $@
   #$@
@@ -2532,7 +2532,7 @@ FULL_NAME "Courier Oblique"
    $@
    $@
    $@@
--3 tilde
+0x0303 tilde
     $@
  # #$@
 # # $@
