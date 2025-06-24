@@ -2475,7 +2475,7 @@ FACE_NAME "Lucida Sans Bold Italic"
  # ## $@
 ##    $@
 ##    $@@
--1 tilde
+0x0303 tilde
    $@
    $@
 ###$@
@@ -2486,7 +2486,7 @@ FACE_NAME "Lucida Sans Bold Italic"
    $@
    $@
    $@@
--2 circumflex
+0x0302 circumflex
    $@
    $@
 ###$@
@@ -2497,7 +2497,7 @@ FACE_NAME "Lucida Sans Bold Italic"
    $@
    $@
    $@@
--3 grave
+0x0300 grave
   $@
   $@
 ##$@

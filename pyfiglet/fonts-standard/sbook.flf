@@ -2497,7 +2497,7 @@ _DEC_DEVICE_FONTNAMES "PS=NewCenturySchlbk-Roman"
 ######$@
       $@
       $@@
--1 circumflex
+0x0302 circumflex
  # $@
 # #$@
    $@
@@ -2508,7 +2508,7 @@ _DEC_DEVICE_FONTNAMES "PS=NewCenturySchlbk-Roman"
    $@
    $@
    $@@
--2 grave
+0x0300 grave
 # $@
  #$@
   $@
@@ -2519,7 +2519,7 @@ _DEC_DEVICE_FONTNAMES "PS=NewCenturySchlbk-Roman"
   $@
   $@
   $@@
--3 tilde
+0x0303 tilde
  #  #$@
 # ## $@
      $@
