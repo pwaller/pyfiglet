@@ -1,10 +1,11 @@
-![rich-pyfiglet-banner-transparent](https://github.com/user-attachments/assets/4d424957-7846-430e-bb59-b4267453e565)
+<img width="1238" height="495" alt="rich-pyfiglet-banner" src="https://github.com/user-attachments/assets/efa9dcd4-2521-4c15-90a2-b6b8486937ad" />
 
 # Rich-Pyfiglet
 
 ![badge](https://img.shields.io/badge/linted-Ruff-blue?style=for-the-badge&logo=ruff)
 ![badge](https://img.shields.io/badge/formatted-black-black?style=for-the-badge)
-![badge](https://img.shields.io/badge/type_checked-MyPy-blue?style=for-the-badge&logo=python)
+![badge](https://img.shields.io/badge/type_checked-MyPy_(strict)-blue?style=for-the-badge&logo=python)
+![badge](https://img.shields.io/badge/Type_checked-Pyright_(strict)-blue?style=for-the-badge&logo=python)
 ![badge](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
 
 Rich-PyFiglet is an implementation of [PyFiglet](https://github.com/pwaller/pyfiglet) for [Rich](https://github.com/Textualize/rich).
@@ -16,15 +17,15 @@ It provides a RichFiglet class that is fully compatible with the Rich API and ca
 ## Features
 
 - Usage in your Rich scripts can be a single line of code with default settings.
-- Color system built on Rich can take common formats such as hex code and RGB, as well as a big list of named colors
+- Color system built on Rich can take common formats such as hex code and RGB, as well as a big list of named colors.
+- Banner will automatically adjust to the terminal width and word-wrap the text.
 - Automatically create gradients between colors vertically or horizontally.
 - Comes with 4 animation modes built in (up, down, smooth-strobe, fast-strobe).
 - Pass in a list of colors for multicolored gradients and animations.
 - Manually tweak the gradient quality as well as the animation FPS in order to customize the banner the way you want it.
-- Add borders around the banner - The RichFiglet takes border settings as arguments, which allows it to properly account for the border and padding when calculating its available space (without doing this, some terminal sizes would mess up the render)
+- Add borders around the banner - The RichFiglet takes border settings as arguments, which allows it to properly account for the border and padding when calculating its available space (without doing this, some terminal sizes would mess up the render).
 - Included CLI mode for quick testing.
-- The fonts are type-hinted to give you auto-completion in your code editor, eliminating the need to manually
-check what fonts are available.
+- The fonts are type-hinted to give you auto-completion in your code editor, eliminating the need to manually check what fonts are available.
 
 ## Try out the CLI
 
@@ -42,11 +43,11 @@ pipx run rich-pyfiglet "Rich is awesome" --colors blue1:magenta3 -h
 
 ## Documentation
 
-### [Click here for documentation](https://edward-jazzhands.github.io/libraries/rich-pyfiglet/)
+### [Click here for documentation](https://edward-jazzhands.github.io/libraries/rich-pyfiglet/docs/)
 
-## Questions, issues, suggestions?
+## Questions, Issues, Suggestions?
 
-Feel free to post an issue.
+Use the [issues](https://github.com/edward-jazzhands/rich-pyfiglet/issues) section for bugs or problems, and post ideas or feature requests on the [TTY group discussion board](https://github.com/orgs/ttygroup/discussions).
 
 ## Thanks and Copyright
 
