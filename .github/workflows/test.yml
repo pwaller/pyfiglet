@@ -1,8 +1,10 @@
 name: test
 
 on:
-  - push
-  - pull_request
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -36,27 +38,27 @@ jobs:
       run: |
         pytest -vv
 
-  pypi-publish:
-    needs: build
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-    name: Upload release to PyPI
-    runs-on: ubuntu-latest
-    environment:
-      name: publish
-      url: https://pypi.org/p/pyfiglet
-    permissions:
-      id-token: write
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.11.3
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11.3
-        cache: pip
-    - name: Build full dist
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r dev-requirements.txt
-        make full
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+  # pypi-publish:
+  #   needs: build
+  #   if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+  #   name: Upload release to PyPI
+  #   runs-on: ubuntu-latest
+  #   environment:
+  #     name: publish
+  #     url: https://pypi.org/p/pyfiglet
+  #   permissions:
+  #     id-token: write
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Set up Python 3.11.3
+  #     uses: actions/setup-python@v4
+  #     with:
+  #       python-version: 3.11.3
+  #       cache: pip
+  #   - name: Build full dist
+  #     run: |
+  #       python -m pip install --upgrade pip
+  #       pip install -r dev-requirements.txt
+  #       make full
+  #   - name: Publish package distributions to PyPI
+  #     uses: pypa/gh-action-pypi-publish@release/v1

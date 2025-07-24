@@ -1,0 +1,65 @@
+# .github/workflows/update-docs.yml
+
+name: Update Central Docs
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  create_docs_pr:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out the code of the library that triggered the workflow
+      - name: Checkout Library Repo
+        uses: actions/checkout@v4
+
+      # Step 2: Check out the central docs repo into a 'docs-repo' subfolder
+      - name: Checkout Docs Repo
+        uses: actions/checkout@v4
+        with:
+          repository: edward-jazzhands/libraries
+          path: docs-repo
+          token: ${{ secrets.DOCS_REPO_PAT }}
+
+      # Step 3: Copy the library's docs into the checked-out docs repo
+      - name: Prepare and Copy Doc Files
+        run: |
+          LIBRARY_NAME=${{ github.event.repository.name }}
+          DEST_DIR="docs-repo/docs/$LIBRARY_NAME"
+
+          echo "Preparing to copy docs for $LIBRARY_NAME to $DEST_DIR"
+          mkdir -p "$DEST_DIR"
+          
+          # Copy README as the library's main index page
+          cp README.md "$DEST_DIR/index.md"
+          
+          # If a /docs folder exists in the library, copy its contents
+          if [ -d "docs" ]; then
+            echo "Copying contents of /docs directory."
+            cp -r docs/* "$DEST_DIR/"
+          else
+            echo "No /docs directory found in this library."
+            exit 1
+          fi
+      
+      # Step 4: Create a pull request with the changes
+      # This magical tool will create a PR in the docs repo with the changes
+      # it automatically grabs the repo info for the mkdocs website from the
+      # docs-repo folder that we checked out earlier.
+      # It will then automatically compare the current state of the docs-repo
+      # with the changes we made in the previous step and create a PR if there are changes.
+      - name: Create Docs Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.DOCS_REPO_PAT }}
+          path: ./docs-repo
+          commit-message: "docs: Update docs for ${{ github.event.repository.name }}"
+          branch: "docs-update/${{ github.event.repository.name }}"
+          title: "Docs: Update for ${{ github.event.repository.name }}"
+          body: |
+            Automated documentation update from the `${{ github.event.repository.name }}` repository.
+
+            Triggered by commit: `${{ github.sha }}`
