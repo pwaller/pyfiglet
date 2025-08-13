@@ -55,7 +55,7 @@ setup(
     author_email='p@pwaller.net',
     url='https://github.com/pwaller/pyfiglet',
     packages=['pyfiglet', 'pyfiglet.fonts'],
-    package_data={'pyfiglet.fonts': ['*.flf', '*.flc']},
+    package_data={'pyfiglet.fonts': ['*.flf', '*.flc', '*.tlf']},
     entry_points={
         'console_scripts': [
             'pyfiglet = pyfiglet:main',
