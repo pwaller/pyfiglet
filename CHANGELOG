@@ -1,3 +1,7 @@
+# 2025-08-15 1.0.4
+
+  * Minor release to include tlf fonts in PyPi distribution.
+
 # 2025-06-02 1.0.3
 
   The significant change in this release is to introduce type hinting (#147).
