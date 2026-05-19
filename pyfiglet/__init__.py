@@ -170,16 +170,25 @@ class FigletFont(object):
 
     @classmethod
     def isValidFont(cls, font:str):
+        """
+        This function checks if the font given is valid or not.
+        Font file name is taken as argument. Hence, ".flf" and ".tlf" must be added 
+        to the argument; otherwise, the function returns False.
+
+        """
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
         full_file = os.path.join(SHARED_DIRECTORY, font)
-        if os.path.isfile(font):
-            f = open(font, 'rb')
-        elif os.path.isfile(full_file):
-            f = open(full_file, 'rb')
-        else:
-            f = importlib.resources.files('pyfiglet.fonts').joinpath(font).open('rb')
+        try: # Catches FileNotFoundError in case any of the open()s encounters it.
+            if os.path.isfile(font):
+                f = open(font, 'rb')
+            elif os.path.isfile(full_file):
+                f = open(full_file, 'rb')
+            else:
+                f = importlib.resources.files('pyfiglet.fonts').joinpath(font).open('rb')
+        except FileNotFoundError:
+            return False
 
         if zipfile.is_zipfile(f):
             # If we have a match, the ZIP file spec says we should just read the first file in the ZIP.

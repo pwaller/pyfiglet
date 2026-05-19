@@ -5,6 +5,7 @@ import os.path
 import sys
 from optparse import OptionParser
 from pyfiglet import Figlet
+from pyfiglet import FigletFont
 from subprocess import Popen, PIPE
 try:
     from colorama import init
@@ -101,6 +102,8 @@ class Test(object):
             print('FAILED = %s' % set(self.failed))
 
         return self.failed, self.oked
+    def test_invalid_font_file():
+        assert FigletFont.isValidFont("does_not_exist.flf") is False
 
 def banner(text):
     cprint(Figlet().renderText(text), "blue")
@@ -122,6 +125,7 @@ def main():
     test.check_text("Averylongwordthatwillbecutatsomepoint I hope", False)
     banner("TESTING explicit new line")
     test.check_text("line1\nline2", True)
+    test.test_invalid_font_file()
     if len(test.check_result()[0]) == 0:
         return 0
     else:
