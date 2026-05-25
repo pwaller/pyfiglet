@@ -3,6 +3,8 @@ import subprocess
 
 import pytest
 
+import pyfiglet
+
 
 @pytest.fixture
 def test_font_dir():
@@ -43,6 +45,14 @@ def test_strip_strange_font(test_font_dir):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
     assert result.stdout.decode() == expected
     assert result.returncode == 0
+
+
+def test_font_directories_are_searched(test_font_dir, monkeypatch):
+    monkeypatch.setattr(pyfiglet, "FONT_DIRECTORIES", (test_font_dir,))
+
+    assert "TEST_ONLY" in pyfiglet.FigletFont.getFonts()
+    rendered = pyfiglet.Figlet(font="TEST_ONLY").renderText("0")
+    assert "0000000000" in rendered
 
 
 # normalize is just strip with padding

@@ -105,6 +105,10 @@ The font file can be a ZIP file of lots of fonts or just a single font.
 Depending on how you installed pyfiglet, you may find that you need
 root access to install the font - e.g. `sudo pyfiglet -L <font file>`.
 
+On Unix-like systems, pyfiglet also looks for fonts installed by FIGlet in
+`/usr/local/share/figlet` and `/usr/share/figlet`, so system fonts can be used
+by name without installing them separately into pyfiglet.
+
 ## **Author**
 
 All of the documentation and the majority of the work done was by

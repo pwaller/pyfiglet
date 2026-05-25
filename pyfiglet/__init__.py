@@ -60,8 +60,14 @@ RESET_COLORS = b'\033[0m'
 
 if sys.platform == 'win32':
     SHARED_DIRECTORY = os.path.join(os.environ["APPDATA"], "pyfiglet")
+    FONT_DIRECTORIES = (SHARED_DIRECTORY,)
 else:
     SHARED_DIRECTORY = '/usr/local/share/pyfiglet/'
+    FONT_DIRECTORIES = (
+        SHARED_DIRECTORY,
+        '/usr/local/share/figlet',
+        '/usr/share/figlet',
+    )
 
 
 def figlet_format(text:str, font:str=DEFAULT_FONT, **kwargs:Any):
@@ -144,7 +150,7 @@ class FigletFont(object):
                 font_path = path
                 break
             else:
-                for location in ("./", SHARED_DIRECTORY):
+                for location in ("./",) + FONT_DIRECTORIES:
                     full_name = os.path.join(location, fn)
                     if os.path.isfile(full_name):
                         font_path = pathlib.Path(full_name)
@@ -173,13 +179,16 @@ class FigletFont(object):
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
-        full_file = os.path.join(SHARED_DIRECTORY, font)
         if os.path.isfile(font):
             f = open(font, 'rb')
-        elif os.path.isfile(full_file):
-            f = open(full_file, 'rb')
         else:
-            f = importlib.resources.files('pyfiglet.fonts').joinpath(font).open('rb')
+            for location in FONT_DIRECTORIES:
+                full_file = os.path.join(location, font)
+                if os.path.isfile(full_file):
+                    f = open(full_file, 'rb')
+                    break
+            else:
+                f = importlib.resources.files('pyfiglet.fonts').joinpath(font).open('rb')
 
         if zipfile.is_zipfile(f):
             # If we have a match, the ZIP file spec says we should just read the first file in the ZIP.
@@ -198,8 +207,9 @@ class FigletFont(object):
     @classmethod
     def getFonts(cls):
         all_files = importlib.resources.files('pyfiglet.fonts').iterdir()
-        if os.path.isdir(SHARED_DIRECTORY):
-             all_files = itertools.chain(all_files, pathlib.Path(SHARED_DIRECTORY).iterdir())
+        for location in FONT_DIRECTORIES:
+            if os.path.isdir(location):
+                all_files = itertools.chain(all_files, pathlib.Path(location).iterdir())
         return [font.name.split('.', 2)[0] for font
                 in all_files
                 if font.is_file() and cls.isValidFont(font.name)]
