@@ -55,6 +55,15 @@ def test_font_directories_are_searched(test_font_dir, monkeypatch):
     assert "0000000000" in rendered
 
 
+def test_is_valid_font_missing():
+    # A .flf/.tlf-named font that does not exist must be reported invalid,
+    # not raise FileNotFoundError. See #156.
+    assert pyfiglet.FigletFont.isValidFont("does_not_exist.flf") is False
+    assert pyfiglet.FigletFont.isValidFont("does_not_exist.tlf") is False
+    # A real bundled font is still recognized as valid.
+    assert pyfiglet.FigletFont.isValidFont("standard.flf")
+
+
 # normalize is just strip with padding
 def test_normalize():
     command = "pyfiglet -f slant -n 0"

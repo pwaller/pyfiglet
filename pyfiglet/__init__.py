@@ -179,16 +179,19 @@ class FigletFont(object):
         if not font.endswith(('.flf', '.tlf')):
             return False
         f = None
-        if os.path.isfile(font):
-            f = open(font, 'rb')
-        else:
-            for location in FONT_DIRECTORIES:
-                full_file = os.path.join(location, font)
-                if os.path.isfile(full_file):
-                    f = open(full_file, 'rb')
-                    break
+        try:
+            if os.path.isfile(font):
+                f = open(font, 'rb')
             else:
-                f = importlib.resources.files('pyfiglet.fonts').joinpath(font).open('rb')
+                for location in FONT_DIRECTORIES:
+                    full_file = os.path.join(location, font)
+                    if os.path.isfile(full_file):
+                        f = open(full_file, 'rb')
+                        break
+                else:
+                    f = importlib.resources.files('pyfiglet.fonts').joinpath(font).open('rb')
+        except FileNotFoundError:
+            return False
 
         if zipfile.is_zipfile(f):
             # If we have a match, the ZIP file spec says we should just read the first file in the ZIP.
