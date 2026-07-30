@@ -109,6 +109,45 @@ On Unix-like systems, pyfiglet also looks for fonts installed by FIGlet in
 `/usr/local/share/figlet` and `/usr/share/figlet`, so system fonts can be used
 by name without installing them separately into pyfiglet.
 
+### **API reference**
+
+There are two ways to render text: the `Figlet` class, or the module-level
+`figlet_format`/`print_figlet` functions (which create a `Figlet` for you
+under the hood).
+
+- `Figlet(font='standard', direction='auto', justify='auto', width=80)` -
+  Create a renderer. `font` is the font name (as listed by `getFonts()` or
+  `pyfiglet -l`); `direction` and `justify` are `'auto'`, `'left-to-right'`/
+  `'right-to-left'`, or `'left'`/`'center'`/`'right'` respectively, and
+  default to whatever the chosen font specifies; `width` sets the column
+  width used for wrapping/justification.
+  - `.renderText(text)` - returns a `FigletString` (a `str` subclass) with
+    the rendered ASCII art. This is where you print your text; **color is
+    not handled here** - see `print_figlet` below.
+  - `.getFonts()` - lists the font names installed and available for use.
+- `figlet_format(text, font='standard', **kwargs)` - shortcut for
+  `Figlet(font, **kwargs).renderText(text)`; returns the rendered
+  `FigletString`. `**kwargs` accepts the same `direction`/`justify`/`width`
+  options as `Figlet`.
+- `print_figlet(text, font='standard', colors=':', **kwargs)` - like
+  `figlet_format`, but also prints the result directly to stdout wrapped in
+  ANSI color codes. This is the function to use if you want colored output.
+  `colors` takes the form `"foreground:background"` (either half may be
+  omitted, e.g. `"red:"` for foreground only or `":blue"` for background
+  only). Each color is either a name from `pyfiglet.COLOR_CODES` (e.g.
+  `RED`, `LIGHT_BLUE`, `DEFAULT`) or an RGB triplet as `"R;G;B"` (each
+  0-255), e.g. `print_figlet('hi', colors='255;0;0:0;0;255')`.
+
+```py
+import pyfiglet
+
+# Plain rendering, no color:
+print(pyfiglet.figlet_format('hello', font='slant'))
+
+# Rendering with color (foreground red, default background):
+pyfiglet.print_figlet('hello', font='slant', colors='RED:')
+```
+
 ## **Author**
 
 All of the documentation and the majority of the work done was by
