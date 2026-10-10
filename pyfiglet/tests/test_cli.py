@@ -55,6 +55,20 @@ def test_font_directories_are_searched(test_font_dir, monkeypatch):
     assert "0000000000" in rendered
 
 
+@pytest.mark.parametrize('extension', ['flf', 'tlf'])
+def test_font_names_with_dots_are_preserved(test_font_dir, tmp_path, monkeypatch, extension):
+    source = os.path.join(test_font_dir, 'TEST_ONLY.flf')
+    font_path = tmp_path / ('custom.name.' + extension)
+    with open(source, 'rb') as font:
+        font_path.write_bytes(font.read())
+    monkeypatch.setattr(pyfiglet, 'FONT_DIRECTORIES', (str(tmp_path),))
+
+    assert 'custom.name' in pyfiglet.FigletFont.getFonts()
+    assert 'custom' not in pyfiglet.FigletFont.getFonts()
+    rendered = pyfiglet.Figlet(font='custom.name').renderText('0')
+    assert '0000000000' in rendered
+
+
 def test_is_valid_font_missing():
     # A .flf/.tlf-named font that does not exist must be reported invalid,
     # not raise FileNotFoundError. See #156.
