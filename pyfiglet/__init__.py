@@ -213,7 +213,7 @@ class FigletFont(object):
         for location in FONT_DIRECTORIES:
             if os.path.isdir(location):
                 all_files = itertools.chain(all_files, pathlib.Path(location).iterdir())
-        return [font.name.split('.', 2)[0] for font
+        return [font.name.rsplit('.', 1)[0] for font
                 in all_files
                 if font.is_file() and cls.isValidFont(font.name)]
 
