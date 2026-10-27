@@ -929,6 +929,13 @@ def color_to_ansi(color:str, isBackground:bool):
         if isBackground:
             ansiCode += 10
     else:
+        try:
+            valid = all(channel.isascii() and channel.isdecimal() and int(channel) <= 255
+                        for channel in color.split(';'))
+        except ValueError:
+            valid = False
+        if not valid:
+            raise InvalidColor('Specified color {!r} not a valid color in R;G;B format'.format(color))
         ansiCode = 48 if isBackground else 38
         ansiCode = '{};2;{}'.format(ansiCode, color)
 
