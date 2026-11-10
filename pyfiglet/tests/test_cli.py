@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 import pytest
 
@@ -79,3 +80,22 @@ def test_normalize():
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
     assert result.stdout.decode() == expected
     assert result.returncode == 0
+
+
+def test_info_font_missing_font(capsys, monkeypatch):
+    # -i with a missing font must print a clean error and return 1,
+    # not raise FontNotFound (mirrors the render path in main()).
+    monkeypatch.setattr(sys, "argv", ["pyfiglet", "-i", "-f", "nosuchfont_xyz"])
+    assert pyfiglet.main() == 1
+    out = capsys.readouterr().out
+    assert "pyfiglet error" in out
+    assert "nosuchfont_xyz" in out
+
+
+def test_info_font_valid_font(capsys, monkeypatch):
+    # Guard: the valid-font -i path still prints info and exits 0.
+    monkeypatch.setattr(sys, "argv", ["pyfiglet", "-i", "-f", "standard"])
+    with pytest.raises(SystemExit) as exc:
+        pyfiglet.main()
+    assert exc.value.code == 0
+    assert "Standard" in capsys.readouterr().out
