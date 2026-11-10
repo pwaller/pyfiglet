@@ -992,7 +992,11 @@ def main():
         exit(0)
 
     if opts.info_font:
-        print(FigletFont.infoFont(opts.font))
+        try:
+            print(FigletFont.infoFont(opts.font))
+        except FontNotFound:
+            print(f"pyfiglet error: requested font {opts.font!r} not found.")
+            return 1
         exit(0)
 
     if opts.load:
